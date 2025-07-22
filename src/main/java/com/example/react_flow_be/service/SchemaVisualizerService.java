@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -144,5 +145,52 @@ public class SchemaVisualizerService {
             connection.getSourceModel().getName(),
             connection.getTargetModel().getName()
         );
+    }
+
+    @Transactional
+    public boolean updateModelPosition(String modelName, Double positionX, Double positionY) {
+        try {
+            Optional<Model> modelOpt = modelRepository.findByName(modelName);
+            if (modelOpt.isPresent()) {
+                Model model = modelOpt.get();
+                model.setPositionX(positionX);
+                model.setPositionY(positionY);
+                modelRepository.save(model);
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            // log.error("Error updating model position for {}", modelName, e);
+            return false;
+        }
+    }
+
+    @Transactional
+    public boolean updateField(Long fieldId, String fieldName, String fieldType) {
+        try {
+            Optional<Field> fieldOpt = fieldRepository.findById(fieldId);
+            if (fieldOpt.isPresent()) {
+                Field field = fieldOpt.get();
+                field.setName(fieldName);
+                field.setType(fieldType);
+                
+                // Cập nhật hasConnections nếu type thay đổi
+                List<String> modelNames = modelRepository.findAll()
+                    .stream()
+                    .map(Model::getName)
+                    .collect(Collectors.toList());
+                
+                boolean hasConnections = modelNames.stream()
+                    .anyMatch(modelName -> fieldType.contains(modelName));
+                field.setHasConnections(hasConnections);
+                
+                fieldRepository.save(field);
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            // log.error("Error updating field {}", fieldId, e);
+            return false;
+        }
     }
 }
