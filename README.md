@@ -17,4 +17,5 @@ reload project: right click pom.xml -> reload
 run project: 
 
 option1: click spring icon extension, click run project
+
 option2: right click in Main file -> run Java file
