@@ -17,31 +17,55 @@ public class SchemaVisualizerService {
     
     private final ModelRepository modelRepository;
     private final FieldRepository fieldRepository;
-    private final ConnectionRepository connectionRepository; // This is now for ModelConnection → Connection
+    private final ConnectionRepository connectionRepository;
     private final DatabaseRepository databaseRepository;
     private final FolderRepository folderRepository;
     private final UserRepository userRepository;
     
     @Transactional(readOnly = true)
     public SchemaVisualizerResponse getSchemaData() {
-        List<Model> models = modelRepository.findAllWithFields();
-        List<Connection> connections = connectionRepository.findAllWithModels(); // Connection = old ModelConnection
+        // Get all databases
+        List<Database> databases = databaseRepository.findAll();
         
-        List<ModelDto> modelDtos = models.stream()
-            .map(this::convertToModelDto)
-            .collect(Collectors.toList());
+        List<ModelDto> modelDtos;
+        List<ConnectionDto> connectionDtos;
+        
+        if (!databases.isEmpty()) {
+            Database database = databases.get(0); // Get first database
             
-        List<ConnectionDto> connectionDtos = connections.stream()
-            .map(this::convertToConnectionDto)
-            .collect(Collectors.toList());
+            // Get models từ shapes của database (simplified approach)
+            List<Model> models = database.getModels();
             
+            // Get connections từ diagram ID thay vì relationships
+            List<Connection> connections = connectionRepository.findByDiagramId(database.getId());
+            
+            modelDtos = models.stream()
+                .map(this::convertToModelDto)
+                .collect(Collectors.toList());
+                
+            connectionDtos = connections.stream()
+                .map(connection -> new ConnectionDto(
+                    connection.getId(),
+                    connection.getSourceFieldName(), // Dùng field name làm connection name
+                    connection.getConnectionType().name(),
+                    connection.getIsAnimated(),
+                    connection.getStrokeColor(),
+                    getModelNameByNodeId(connection.getSourceNodeId()), // Convert nodeId → model name
+                    getModelNameByNodeId(connection.getTargetNodeId())  // Convert nodeId → model name
+                ))
+                .collect(Collectors.toList());
+        } else {
+            modelDtos = List.of();
+            connectionDtos = List.of();
+        }
+        
         return new SchemaVisualizerResponse(modelDtos, connectionDtos);
     }
     
     @Transactional
     public void initializeSampleData() {
         // Clear existing data
-        connectionRepository.deleteAll(); // Clear connections (old ModelConnection)
+        connectionRepository.deleteAll();
         fieldRepository.deleteAll(); 
         modelRepository.deleteAll();
         databaseRepository.deleteAll();
@@ -50,14 +74,15 @@ public class SchemaVisualizerService {
         User sampleUser = createSampleUser();
         Folder sampleFolder = createSampleFolder(sampleUser);
         
-        // Create Database (extends Diagram)
+        // Create Database
         Database database = createSampleDatabase(sampleFolder);
         
-        // Create Models (extends Shape) với position
-        Model userModel = createModel("User", 100.0, 100.0, true, database);
-        Model postModel = createModel("Post", 500.0, 100.0, false, database);
-        Model commentModel = createModel("Comment", 300.0, 400.0, true, database);
+        // Create Models với better positioning
+        Model userModel = createModel("User", 100.0, 300.0, true, database);
+        Model postModel = createModel("Post", 500.0, 100.0, true, database);
+        Model commentModel = createModel("Comment", 500.0, 500.0, false, database);
         
+        // Save models
         modelRepository.saveAll(List.of(userModel, postModel, commentModel));
         
         // Create Fields cho User
@@ -80,42 +105,24 @@ public class SchemaVisualizerService {
         createField(commentModel, "user_id", "BIGINT", true, 3, false, false); // FK
         createField(commentModel, "created_at", "TIMESTAMP", false, 4, false, false);
         
-        // Create Connections (old ModelConnection - now Connection entity)
-        Connection postToUser = new Connection();
-        postToUser.setLabel("author");
-        postToUser.setSourceModel(postModel);
-        postToUser.setTargetModel(userModel);
-        postToUser.setConnectionType(Connection.ConnectionType.MANY_TO_ONE);
-        postToUser.setSourceFieldName("user_id");
-        postToUser.setTargetFieldName("id");
-        postToUser.setForeignKeyName("fk_post_user");
-        postToUser.setIsAnimated(true);
-        postToUser.setStrokeColor("#2563eb");
-        postToUser.setTargetArrowType(Connection.ArrowType.CROW_FOOT);
+        // Create Connections với better colors và cleaner approach
+        Connection postToUser = createConnection(
+            "author", postModel.getNodeId(), userModel.getNodeId(),
+            Connection.ConnectionType.MANY_TO_ONE, "user_id", "id",
+            "fk_post_user", "#4A90E2", database
+        );
         
-        Connection commentToPost = new Connection();
-        commentToPost.setLabel("post");
-        commentToPost.setSourceModel(commentModel);
-        commentToPost.setTargetModel(postModel);
-        commentToPost.setConnectionType(Connection.ConnectionType.MANY_TO_ONE);
-        commentToPost.setSourceFieldName("post_id");
-        commentToPost.setTargetFieldName("id");
-        commentToPost.setForeignKeyName("fk_comment_post");
-        commentToPost.setIsAnimated(true);
-        commentToPost.setStrokeColor("#dc2626");
-        commentToPost.setTargetArrowType(Connection.ArrowType.CROW_FOOT);
+        Connection commentToPost = createConnection(
+            "post", commentModel.getNodeId(), postModel.getNodeId(),
+            Connection.ConnectionType.MANY_TO_ONE, "post_id", "id", 
+            "fk_comment_post", "#E53E3E", database
+        );
         
-        Connection commentToUser = new Connection();
-        commentToUser.setLabel("author");
-        commentToUser.setSourceModel(commentModel);
-        commentToUser.setTargetModel(userModel);
-        commentToUser.setConnectionType(Connection.ConnectionType.MANY_TO_ONE);
-        commentToUser.setSourceFieldName("user_id");
-        commentToUser.setTargetFieldName("id");
-        commentToUser.setForeignKeyName("fk_comment_user");
-        commentToUser.setIsAnimated(true);
-        commentToUser.setStrokeColor("#16a34a");
-        commentToUser.setTargetArrowType(Connection.ArrowType.CROW_FOOT);
+        Connection commentToUser = createConnection(
+            "author", commentModel.getNodeId(), userModel.getNodeId(),
+            Connection.ConnectionType.MANY_TO_ONE, "user_id", "id",
+            "fk_comment_user", "#38A169", database
+        );
         
         connectionRepository.saveAll(List.of(postToUser, commentToPost, commentToUser));
     }
@@ -174,12 +181,43 @@ public class SchemaVisualizerService {
         model.setBorderRadius(8);
         model.setZIndex(1);
         
-        // Model properties (specialized)
+        // Model properties
         model.setModelType(Model.ModelType.TABLE);
-        model.setDatabase(database);
-        model.setDiagram(database); // Database extends Diagram
+        model.setDiagram(database); // Set diagram instead of database
         
         return model;
+    }
+    
+    private Connection createConnection(String label, String sourceNodeId, String targetNodeId,
+                                     Connection.ConnectionType connectionType, String sourceField, 
+                                     String targetField, String fkName, String color, Database database) {
+        Connection connection = new Connection();
+        
+        // Link properties (inherited)
+        connection.setEdgeId("conn_" + sourceNodeId + "_to_" + targetNodeId);
+        connection.setLabel(label);
+        connection.setSourceNodeId(sourceNodeId);
+        connection.setTargetNodeId(targetNodeId);
+        connection.setSourceNodeType(Link.NodeType.SHAPE);
+        connection.setTargetNodeType(Link.NodeType.SHAPE);
+        
+        // Set handles để connect tới đúng field
+        connection.setSourceHandle(sourceNodeId + "-" + sourceField); // Post-user_id
+        connection.setTargetHandle(targetNodeId); // User (target model)
+        
+        connection.setStrokeColor(color);
+        connection.setStrokeWidth(2);
+        connection.setIsAnimated(true);
+        connection.setTargetArrowType(Link.ArrowType.CROW_FOOT);
+        connection.setDiagram(database); // Set diagram
+        
+        // Connection properties
+        connection.setConnectionType(connectionType);
+        connection.setSourceFieldName(sourceField);
+        connection.setTargetFieldName(targetField);
+        connection.setForeignKeyName(fkName);
+        
+        return connection;
     }
     
     private void createField(Model model, String name, String dataType, boolean hasConnections, 
@@ -251,9 +289,19 @@ public class SchemaVisualizerService {
             connection.getConnectionType().name(),
             connection.getIsAnimated(),
             connection.getStrokeColor(),
-            connection.getSourceModel().getName(),
-            connection.getTargetModel().getName()
+            connection.getSourceNodeId(), // Dùng sourceNodeId thay vì model name
+            connection.getTargetNodeId()  // Dùng targetNodeId thay vì model name
         );
+    }
+    
+    // Helper method để get Model name by nodeId
+    private String getModelNameByNodeId(String nodeId) {
+        // Query từ Model repository để get name by nodeId
+        return modelRepository.findAll().stream()
+            .filter(model -> nodeId.equals(model.getNodeId()))
+            .map(Model::getName)
+            .findFirst()
+            .orElse("Unknown");
     }
 
     @Transactional
@@ -292,8 +340,12 @@ public class SchemaVisualizerService {
                         // Handle cases like DECIMAL(10,2)
                         if (lengthStr.contains(",")) {
                             String[] parts = lengthStr.split(",");
-                            field.setPrecision(Integer.parseInt(parts[0].trim()));
-                            field.setScale(Integer.parseInt(parts[1].trim()));
+                            try {
+                                field.setPrecision(Integer.parseInt(parts[0].trim()));
+                                field.setScale(Integer.parseInt(parts[1].trim()));
+                            } catch (NumberFormatException ex) {
+                                // Ignore if can't parse precision/scale
+                            }
                         }
                     }
                 } else {

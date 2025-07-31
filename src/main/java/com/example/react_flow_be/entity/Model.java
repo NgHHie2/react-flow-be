@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import java.util.List;
@@ -22,26 +21,22 @@ public class Model extends Shape {
     @Column(nullable = false)
     private ModelType modelType = ModelType.TABLE;
     
-    // Database reference
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "database_id", nullable = false)
-    @JsonBackReference("database-models")
-    private Database database;
+    // BỎ database reference - chỉ dùng diagram từ Shape
+    // Database relationship sẽ được handle qua Diagram
     
     // Fields in this model
     @OneToMany(mappedBy = "model", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference("model-fields")
     private List<Field> fields;
     
-    // Source relationships (this model is the source)
-    @OneToMany(mappedBy = "sourceModel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference("source-relationships")
-    private List<Connection> sourceRelationships;
+    // BỎ connection relationships - để Connection tự handle
+    // Nếu cần thì query từ Connection entity
     
-    // Target relationships (this model is the target)
-    @OneToMany(mappedBy = "targetModel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference("target-relationships")
-    private List<Connection> targetRelationships;
+    // Helper method để get Database
+    public Database getDatabase() {
+        Diagram diagram = super.getDiagram();
+        return (diagram instanceof Database) ? (Database) diagram : null;
+    }
     
     public enum ModelType {
         TABLE,           // Database table

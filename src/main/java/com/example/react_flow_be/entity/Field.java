@@ -26,10 +26,10 @@ public class Field {
     @Column
     private Integer length; // Length for VARCHAR, CHAR, etc.
     
-    @Column
+    @Column(name = "decimal_precision") // Đổi tên column để tránh reserved keyword
     private Integer precision; // For DECIMAL, NUMERIC
     
-    @Column
+    @Column(name = "decimal_scale") // Đổi tên column để rõ ràng hơn
     private Integer scale; // For DECIMAL, NUMERIC
     
     @Column(nullable = false)

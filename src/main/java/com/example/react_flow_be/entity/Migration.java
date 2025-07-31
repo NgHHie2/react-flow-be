@@ -58,7 +58,7 @@ public class Migration {
     @Column
     private LocalDateTime executedAt;
     
-    // Relationships
+    // Relationships - Reference tới database_diagrams table
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "database_id", nullable = false)
     @JsonBackReference("database-migrations")

@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import java.util.List;
 
 @Entity
-@Table(name = "databases")
+@Table(name = "database_diagrams")
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
@@ -30,15 +30,21 @@ public class Database extends Diagram {
     @Column(length = 50)
     private String collation = "utf8mb4_unicode_ci";
     
-    // Database-specific models
-    @OneToMany(mappedBy = "database", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference("database-models")
-    private List<Model> models;
+    // BỎ models relationship - dùng shapes từ Diagram
+    // Models sẽ được query từ shapes với instanceof check
     
     // Database-specific migrations
     @OneToMany(mappedBy = "database", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference("database-migrations")
     private List<Migration> migrations;
+    
+    // Helper method để get Models từ shapes
+    public List<Model> getModels() {
+        return getShapes().stream()
+            .filter(shape -> shape instanceof Model)
+            .map(shape -> (Model) shape)
+            .toList();
+    }
     
     public enum DatabaseType {
         MYSQL,

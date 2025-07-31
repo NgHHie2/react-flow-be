@@ -12,6 +12,7 @@ import java.util.Optional;
 @Repository
 public interface ModelRepository extends JpaRepository<Model, Long> {
     Optional<Model> findByName(String name);
+    Optional<Model> findByNodeId(String nodeId);
     
     @Query("SELECT m FROM Model m LEFT JOIN FETCH m.fields ORDER BY m.name")
     List<Model> findAllWithFields();

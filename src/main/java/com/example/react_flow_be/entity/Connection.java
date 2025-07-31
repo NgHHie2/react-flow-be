@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Entity
 @Table(name = "connections")
@@ -41,16 +40,19 @@ public class Connection extends Link {
     @Column(nullable = false)
     private Boolean isEnforced = true; // Whether FK constraint is enforced
     
-    // Relationships to Models (specialized from Connection's generic node references)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "source_model_id", nullable = false)
-    @JsonBackReference("source-connections")
-    private Model sourceModel;
+    // BỎ Model references - chỉ dùng nodeId từ Link
+    // Nếu cần Model thì query bằng nodeId
     
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "target_model_id", nullable = false)
-    @JsonBackReference("target-connections")
-    private Model targetModel;
+    // Helper methods để get Models từ nodeIds
+    public Model getSourceModel() {
+        // Query Model by nodeId khi cần
+        return null; // Implement in Service layer
+    }
+    
+    public Model getTargetModel() {
+        // Query Model by nodeId khi cần
+        return null; // Implement in Service layer
+    }
     
     public enum ConnectionType {
         ONE_TO_ONE,
