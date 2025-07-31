@@ -3,26 +3,45 @@ package com.example.react_flow_be.entity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Entity
+@Table(name = "connections")
 @Data
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class Connection {
+public class Connection extends Link {
     
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ConnectionType connectionType;
+    
+    // Foreign key information
+    @Column(length = 100)
+    private String foreignKeyName;
+    
+    @Column(length = 100)
+    private String sourceFieldName; // Field in source model
+    
+    @Column(length = 100)
+    private String targetFieldName; // Field in target model
+    
+    // Constraint options
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private CascadeAction onUpdate = CascadeAction.NO_ACTION;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private CascadeAction onDelete = CascadeAction.NO_ACTION;
     
     @Column(nullable = false)
-    private String name; // Tên field tạo connection
+    private Boolean isEnforced = true; // Whether FK constraint is enforced
     
-    private String connectionType = "ONE_TO_ONE"; // ONE_TO_ONE, ONE_TO_MANY, MANY_TO_ONE, MANY_TO_MANY
-    private Boolean isAnimated = true;
-    private String edgeColor = "#b1b1b7";
-    
+    // Relationships to Models (specialized from Connection's generic node references)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "source_model_id", nullable = false)
     @JsonBackReference("source-connections")
@@ -32,4 +51,23 @@ public class Connection {
     @JoinColumn(name = "target_model_id", nullable = false)
     @JsonBackReference("target-connections")
     private Model targetModel;
+    
+    public enum ConnectionType {
+        ONE_TO_ONE,
+        ONE_TO_MANY,
+        MANY_TO_ONE,
+        MANY_TO_MANY,
+        INHERITANCE,     // For class diagrams
+        COMPOSITION,     // For class diagrams
+        AGGREGATION,     // For class diagrams
+        DEPENDENCY       // For class diagrams
+    }
+    
+    public enum CascadeAction {
+        NO_ACTION,
+        RESTRICT,
+        CASCADE,
+        SET_NULL,
+        SET_DEFAULT
+    }
 }
