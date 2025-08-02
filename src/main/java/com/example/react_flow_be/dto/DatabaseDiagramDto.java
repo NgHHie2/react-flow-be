@@ -8,7 +8,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class DatabaseDto {
+public class DatabaseDiagramDto {
     private Long id;
     private String name;
     private String description;
