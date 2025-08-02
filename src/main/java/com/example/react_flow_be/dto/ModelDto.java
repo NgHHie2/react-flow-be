@@ -10,10 +10,25 @@ import java.util.List;
 @AllArgsConstructor
 public class ModelDto {
     private Long id;
+    private String nodeId;
     private String name;
+    private String modelType;
+    
+    // Position & Size
     private Double positionX;
     private Double positionY;
-    private Boolean isChild;
+    private Double width;
+    private Double height;
+    
+    // Style
     private String backgroundColor;
+    private String borderColor;
+    private Integer borderWidth;
+    private String borderStyle;
+    private Integer borderRadius;
+    private Integer zIndex;
+    private Double rotation;
+    
+    // Fields with their connections
     private List<FieldDto> fields;
 }

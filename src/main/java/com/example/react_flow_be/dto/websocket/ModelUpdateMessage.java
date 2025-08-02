@@ -7,9 +7,13 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class NodePositionUpdateMessage {
+public class ModelUpdateMessage {
+    private String nodeId;
     private String modelName;
     private Double positionX;
     private Double positionY;
-    private String sessionId; // để tránh broadcast lại cho chính người gửi
+    private Double width;
+    private Double height;
+    private String backgroundColor;
+    private String sessionId;
 }

@@ -12,5 +12,9 @@ public class FieldUpdateMessage {
     private String fieldName;
     private String fieldType;
     private String modelName;
+    private String nodeId;
+    private Boolean isNullable;
+    private Boolean isPrimaryKey;
+    private Boolean isForeignKey;
     private String sessionId;
 }

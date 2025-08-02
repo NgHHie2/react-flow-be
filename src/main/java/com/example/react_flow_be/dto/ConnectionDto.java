@@ -9,10 +9,19 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ConnectionDto {
     private Long id;
-    private String name;
     private String connectionType;
+    private String targetModelName;
+    private String targetFieldName;
+    private String foreignKeyName;
+    private String onUpdate;
+    private String onDelete;
+    private Boolean isEnforced;
+    
+    // Visual properties
+    private String strokeColor;
+    private Integer strokeWidth;
+    private String strokeStyle;
     private Boolean isAnimated;
-    private String edgeColor;
-    private String source; // Model name
-    private String target; // Model name
+    private String sourceArrowType;
+    private String targetArrowType;
 }
