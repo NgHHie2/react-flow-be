@@ -7,45 +7,56 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 @Entity
-@Table(name = "models")
 @Data
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class Model extends Shape {
+public class Model {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private ModelType modelType = ModelType.TABLE;
+    private String nodeId;
+    private String name;
+    private ModelType modelType;
     
-    // BỎ database reference - chỉ dùng diagram từ Shape
-    // Database relationship sẽ được handle qua Diagram
+    // Position & Size
+    private Double positionX;
+    private Double positionY;
+    private Double width;
+    private Double height;
     
-    // Fields in this model
-    @OneToMany(mappedBy = "model", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference("model-fields")
+    // Style
+    private String backgroundColor;
+    private String borderColor;
+    private Integer borderWidth;
+    private String borderStyle;
+    private Integer borderRadius;
+    
+    private Integer zIndex;
+    private Double rotation;
+    private String customProperties;
+    
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+    
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+    
+    @ManyToOne
+    @JoinColumn(name = "database_diagram_id")
+    private DatabaseDiagram databaseDiagram;
+    
+    @OneToMany(mappedBy = "model")
     private List<Field> fields;
     
-    // BỎ connection relationships - để Connection tự handle
-    // Nếu cần thì query từ Connection entity
-    
-    // Helper method để get Database
-    public Database getDatabase() {
-        Diagram diagram = super.getDiagram();
-        return (diagram instanceof Database) ? (Database) diagram : null;
-    }
-    
     public enum ModelType {
-        TABLE,           // Database table
-        VIEW,            // Database view
-        STORED_PROCEDURE,// Stored procedure
-        FUNCTION,        // Database function
-        TRIGGER,         // Database trigger
-        INDEX,           // Database index
-        SEQUENCE,        // Database sequence
-        CUSTOM          // Custom model type
+        TABLE, VIEW, STORED_PROCEDURE, FUNCTION, TRIGGER, INDEX, SEQUENCE, CUSTOM
     }
 }

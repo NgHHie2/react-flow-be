@@ -13,55 +13,38 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "folders")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Folder {
-    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(nullable = false, length = 100)
     private String name;
-    
-    @Column(length = 500)
     private String description;
-    
-    @Column(nullable = false)
-    private String color = "#3d5787";
+    private String color;
     
     @CreationTimestamp
-    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
     
     @UpdateTimestamp
     private LocalDateTime updatedAt;
     
-    // Self-referencing for parent-child relationship
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "parent_folder_id")
-    @JsonBackReference("parent-children")
     private Folder parentFolder;
     
-    @OneToMany(mappedBy = "parentFolder", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference("parent-children")
+    @OneToMany(mappedBy = "parentFolder")
     private List<Folder> childFolders;
     
-    // Owner relationship
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id", nullable = false)
-    @JsonBackReference("user-folders")
+    @ManyToOne
+    @JoinColumn(name = "owner_id")
     private User owner;
     
-    // Diagrams in this folder
-    @OneToMany(mappedBy = "folder", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference("folder-diagrams")
+    @OneToMany(mappedBy = "folder")
     private List<Diagram> diagrams;
     
-    // Collaborations
-    @OneToMany(mappedBy = "folder", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference("folder-collaborations")
+    @OneToMany(mappedBy = "folder")
     private List<Collaboration> collaborations;
 }

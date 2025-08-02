@@ -1,5 +1,10 @@
 package com.example.react_flow_be.entity;
 
+import java.time.LocalDateTime;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,69 +12,64 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "connections")
 @Data
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class Connection extends Link {
+public class Connection {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    private String edgeId;
+    private String label;
     private ConnectionType connectionType;
-    
-    // Foreign key information
-    @Column(length = 100)
     private String foreignKeyName;
+    private CascadeAction onUpdate;
+    private CascadeAction onDelete;
+    private Boolean isEnforced;
     
-    @Column(length = 100)
-    private String sourceFieldName; // Field in source model
+    // Target information
+    private String targetFieldName;
     
-    @Column(length = 100)
-    private String targetFieldName; // Field in target model
+    // Style cho visualization
+    private LinkType linkType;
+    private ArrowType sourceArrowType;
+    private ArrowType targetArrowType;
+    private String strokeColor;
+    private Integer strokeWidth;
+    private String strokeStyle;
+    private Boolean isAnimated;
+    private String pathData;
+    private Integer zIndex;
     
-    // Constraint options
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private CascadeAction onUpdate = CascadeAction.NO_ACTION;
+    @CreationTimestamp
+    private LocalDateTime createdAt;
     
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private CascadeAction onDelete = CascadeAction.NO_ACTION;
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
     
-    @Column(nullable = false)
-    private Boolean isEnforced = true; // Whether FK constraint is enforced
+    @OneToOne
+    @JoinColumn(name = "field_id")
+    private Field field;
     
-    // BỎ Model references - chỉ dùng nodeId từ Link
-    // Nếu cần Model thì query bằng nodeId
-    
-    // Helper methods để get Models từ nodeIds
-    public Model getSourceModel() {
-        // Query Model by nodeId khi cần
-        return null; // Implement in Service layer
-    }
-    
-    public Model getTargetModel() {
-        // Query Model by nodeId khi cần
-        return null; // Implement in Service layer
-    }
+    @ManyToOne
+    @JoinColumn(name = "target_model_id")
+    private Model targetModel;
     
     public enum ConnectionType {
-        ONE_TO_ONE,
-        ONE_TO_MANY,
-        MANY_TO_ONE,
-        MANY_TO_MANY,
-        INHERITANCE,     // For class diagrams
-        COMPOSITION,     // For class diagrams
-        AGGREGATION,     // For class diagrams
-        DEPENDENCY       // For class diagrams
+        ONE_TO_ONE, ONE_TO_MANY, MANY_TO_ONE, MANY_TO_MANY,
+        INHERITANCE, COMPOSITION, AGGREGATION, DEPENDENCY
     }
     
     public enum CascadeAction {
-        NO_ACTION,
-        RESTRICT,
-        CASCADE,
-        SET_NULL,
-        SET_DEFAULT
+        NO_ACTION, RESTRICT, CASCADE, SET_NULL, SET_DEFAULT
+    }
+    
+    public enum LinkType {
+        STRAIGHT, BEZIER, STEP, SMOOTH_STEP, CUSTOM
+    }
+    
+    public enum ArrowType {
+        NONE, ARROW, DIAMOND, CIRCLE, SQUARE, TRIANGLE, CROW_FOOT
     }
 }
