@@ -70,7 +70,7 @@ public class SchemaWebSocketController {
         try {
             String sessionId = headerAccessor.getSessionId();
             message.setSessionId(sessionId);
-            
+            System.out.println(message);
             log.info("Updating Attribute: {} - {} ({})", 
                     message.getAttributeName(), message.getAttributeType(), message.getModelName());
             
@@ -84,7 +84,7 @@ public class SchemaWebSocketController {
             if (updated) {
                 // Broadcast đến tất cả client
                 WebSocketResponse<AttributeUpdateMessage> response = 
-                    WebSocketResponse.success("Attribute_UPDATE", message, sessionId);
+                    WebSocketResponse.success("FIELD_UPDATE", message, sessionId);
                 messagingTemplate.convertAndSend("/topic/schema-updates", response);
             } else {
                 WebSocketResponse<String> errorResponse = 

@@ -33,7 +33,7 @@ public class ModelService {
     public Model createModel(String name, Double x, Double y, Boolean isChild, DatabaseDiagram databaseDiagram) {
         Model model = new Model();
         
-        model.setNodeId("model_" + name.toLowerCase());
+        model.setNodeId(name);
         model.setName(name);
         model.setPositionX(x);
         model.setPositionY(y);
