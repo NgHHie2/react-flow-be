@@ -9,6 +9,6 @@ import com.example.react_flow_be.entity.Connection;
 
 @Repository  
 public interface ConnectionRepository extends JpaRepository<Connection, Long> {
-    Optional<Connection> findByFieldId(Long fieldId);
+    Optional<Connection> findByAttributeId(Long attributeId);
     List<Connection> findByTargetModelId(Long targetModelId);
 }

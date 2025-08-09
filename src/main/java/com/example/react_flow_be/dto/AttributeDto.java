@@ -7,13 +7,13 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class FieldDto {
+public class AttributeDto {
     private Long id;
     private String name;
     private String dataType;
     private Integer length;
-    private Integer precision;
-    private Integer scale;
+    private Integer precisionValue;
+    private Integer scaleValue;
     private Boolean isNullable;
     private Boolean isPrimaryKey;
     private Boolean isForeignKey;
@@ -21,11 +21,11 @@ public class FieldDto {
     private Boolean isAutoIncrement;
     private String defaultValue;
     private String comment;
-    private Integer fieldOrder;
+    private Integer AttributeOrder;
     private Boolean hasIndex;
     private String indexName;
     private String indexType;
     
-    // Connection info if field is FK
+    // Connection info if Attribute is FK
     private ConnectionDto connection;
 }

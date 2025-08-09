@@ -10,11 +10,5 @@ import java.util.Optional;
 
 @Repository
 public interface LinkRepository extends JpaRepository<Link, Long> {
-    List<Link> findByDiagramId(Long diagramId);
-    Optional<Link> findByEdgeId(String edgeId);
-    List<Link> findBySourceNodeId(String sourceNodeId);
-    List<Link> findByTargetNodeId(String targetNodeId);
-    
-    @Query("SELECT l FROM Link l WHERE l.sourceNodeId = :nodeId OR l.targetNodeId = :nodeId")
-    List<Link> findByNodeId(String nodeId);
+
 }

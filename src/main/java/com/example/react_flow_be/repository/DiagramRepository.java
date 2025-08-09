@@ -14,9 +14,4 @@ public interface DiagramRepository extends JpaRepository<Diagram, Long> {
     List<Diagram> findByType(Diagram.DiagramType type);
     Optional<Diagram> findByName(String name);
     
-    @Query("SELECT d FROM Diagram d WHERE d.isPublic = true")
-    List<Diagram> findAllPublic();
-    
-    @Query("SELECT d FROM Diagram d WHERE d.isTemplate = true")
-    List<Diagram> findAllTemplates();
 }

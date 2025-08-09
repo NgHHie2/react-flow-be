@@ -5,7 +5,6 @@ import com.example.react_flow_be.service.SchemaVisualizerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
@@ -20,7 +19,7 @@ public class SchemaWebSocketController {
     
     @MessageMapping("/updateNodePosition")
     public void updateNodePosition(
-            NodePositionUpdateMessage message,
+            ModelUpdateMessage message,
             SimpMessageHeaderAccessor headerAccessor
     ) {
         try {
@@ -28,18 +27,18 @@ public class SchemaWebSocketController {
             message.setSessionId(sessionId);
             
             log.info("Updating node position: {} to ({}, {})", 
-                    message.getModelName(), message.getPositionX(), message.getPositionY());
+                    message.getNodeId(), message.getPositionX(), message.getPositionY());
             
-            // Cập nhật position trong database
+            // Cập nhật position trong database - sử dụng nodeId thay vì modelName
             boolean updated = schemaVisualizerService.updateModelPosition(
-                    message.getModelName(),
+                    message.getNodeId(), // Changed from getModelName() to getNodeId()
                     message.getPositionX(),
                     message.getPositionY()
             );
             
             if (updated) {
                 // Broadcast đến tất cả client khác (trừ người gửi)
-                WebSocketResponse<NodePositionUpdateMessage> response = 
+                WebSocketResponse<ModelUpdateMessage> response = 
                     WebSocketResponse.success("NODE_POSITION_UPDATE", message, sessionId);
                 messagingTemplate.convertAndSend("/topic/schema-updates", response);
             } else {
@@ -62,40 +61,40 @@ public class SchemaWebSocketController {
         }
     }
     
-    @MessageMapping("/updateField")
-    public void updateField(
-            FieldUpdateMessage message,
+    @MessageMapping("/updateAttribute")
+    public void updateAttribute(
+            AttributeUpdateMessage message,
             SimpMessageHeaderAccessor headerAccessor
     ) {
         try {
             String sessionId = headerAccessor.getSessionId();
             message.setSessionId(sessionId);
             
-            log.info("Updating field: {} - {} ({})", 
-                    message.getFieldName(), message.getFieldType(), message.getModelName());
+            log.info("Updating Attribute: {} - {} ({})", 
+                    message.getAttributeName(), message.getAttributeType(), message.getModelName());
             
-            // Cập nhật field trong database
-            boolean updated = schemaVisualizerService.updateField(
-                    message.getFieldId(),
-                    message.getFieldName(),
-                    message.getFieldType()
+            // Cập nhật Attribute trong database
+            boolean updated = schemaVisualizerService.updateAttribute(
+                    message.getAttributeId(),
+                    message.getAttributeName(),
+                    message.getAttributeType()
             );
             
             if (updated) {
                 // Broadcast đến tất cả client
-                WebSocketResponse<FieldUpdateMessage> response = 
-                    WebSocketResponse.success("FIELD_UPDATE", message, sessionId);
+                WebSocketResponse<AttributeUpdateMessage> response = 
+                    WebSocketResponse.success("Attribute_UPDATE", message, sessionId);
                 messagingTemplate.convertAndSend("/topic/schema-updates", response);
             } else {
                 WebSocketResponse<String> errorResponse = 
-                    WebSocketResponse.error("Failed to update field", sessionId);
+                    WebSocketResponse.error("Failed to update Attribute", sessionId);
                 messagingTemplate.convertAndSendToUser(
                     sessionId, "/queue/errors", errorResponse
                 );
             }
             
         } catch (Exception e) {
-            log.error("Error updating field", e);
+            log.error("Error updating Attribute", e);
             String sessionId = headerAccessor.getSessionId();
             WebSocketResponse<String> errorResponse = 
                 WebSocketResponse.error("Internal server error: " + e.getMessage(), sessionId);

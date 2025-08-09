@@ -18,27 +18,22 @@ public class ConnectionService {
     
     @Transactional(readOnly = true)
     public List<Connection> getConnectionsByDiagram(Long diagramId) {
-        // Lấy tất cả connections có field thuộc models của diagram này
+        // Lấy tất cả connections có Attribute thuộc models của diagram này
         return connectionRepository.findAll().stream()
-            .filter(conn -> conn.getField() != null && 
-                          conn.getField().getModel().getDatabaseDiagram().getId().equals(diagramId))
+            .filter(conn -> conn.getAttribute() != null && 
+                          conn.getAttribute().getModel().getDatabaseDiagram().getId().equals(diagramId))
             .collect(Collectors.toList());
     }
     
     @Transactional
-    public Connection createConnection(Field sourceField, Model targetModel, String targetFieldName,
-                                     Connection.ConnectionType connectionType, String fkName, 
+    public Connection createConnection(Attribute sourceAttribute, Model targetModel, String targetAttributeName,
+                                     String fkName, 
                                      String color) {
         Connection connection = new Connection();
         
-        connection.setConnectionType(connectionType);
-        connection.setTargetFieldName(targetFieldName);
+        connection.setTargetAttributeName(targetAttributeName);
         connection.setForeignKeyName(fkName);
-        connection.setStrokeColor(color);
-        connection.setStrokeWidth(2);
-        connection.setIsAnimated(true);
-        connection.setTargetArrowType(Connection.ArrowType.CROW_FOOT);
-        connection.setField(sourceField); // Set field relationship
+        connection.setAttribute(sourceAttribute); // Set Attribute relationship
         connection.setTargetModel(targetModel); // Set target model
         
         return connectionRepository.save(connection);
@@ -47,19 +42,10 @@ public class ConnectionService {
     public ConnectionDto convertToConnectionDto(Connection connection) {
         return new ConnectionDto(
             connection.getId(),
-            connection.getConnectionType().name(),
             connection.getTargetModel() != null ? connection.getTargetModel().getName() : "Unknown",
-            connection.getTargetFieldName(),
+            connection.getTargetAttributeName(),
             connection.getForeignKeyName(),
-            connection.getOnUpdate() != null ? connection.getOnUpdate().name() : null,
-            connection.getOnDelete() != null ? connection.getOnDelete().name() : null,
-            connection.getIsEnforced(),
-            connection.getStrokeColor(),
-            connection.getStrokeWidth(),
-            connection.getStrokeStyle(),
-            connection.getIsAnimated(),
-            connection.getSourceArrowType() != null ? connection.getSourceArrowType().name() : null,
-            connection.getTargetArrowType() != null ? connection.getTargetArrowType().name() : null
+            connection.getIsEnforced()
         );
     }
 }

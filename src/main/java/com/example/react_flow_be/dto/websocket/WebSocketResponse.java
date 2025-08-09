@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class WebSocketResponse<T> {
-    private String type; // "NODE_POSITION_UPDATE", "FIELD_UPDATE", "ERROR"
+    private String type; // "NODE_POSITION_UPDATE", "Attribute_UPDATE", "ERROR"
     private T data;
     private String sessionId;
     private long timestamp;

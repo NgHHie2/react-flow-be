@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Field {
+public class Attribute {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -18,8 +18,8 @@ public class Field {
     private String name;
     private String dataType;
     private Integer length;
-    private Integer precision;
-    private Integer scale;
+    private Integer precisionValue;
+    private Integer scaleValue;
     
     private Boolean isNullable;
     private Boolean isPrimaryKey;
@@ -29,7 +29,7 @@ public class Field {
     
     private String defaultValue;
     private String comment;
-    private Integer fieldOrder;
+    private Integer attributeOrder;
     
     private Boolean hasIndex;
     private String indexName;
@@ -39,7 +39,7 @@ public class Field {
     @JoinColumn(name = "model_id")
     private Model model;
     
-    @OneToOne(mappedBy = "field")
+    @OneToOne(mappedBy = "attribute")
     private Connection connection;
     
     public enum IndexType {

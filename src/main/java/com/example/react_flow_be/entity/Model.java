@@ -24,24 +24,11 @@ public class Model {
     
     private String nodeId;
     private String name;
-    private ModelType modelType;
-    
+
     // Position & Size
     private Double positionX;
     private Double positionY;
-    private Double width;
-    private Double height;
     
-    // Style
-    private String backgroundColor;
-    private String borderColor;
-    private Integer borderWidth;
-    private String borderStyle;
-    private Integer borderRadius;
-    
-    private Integer zIndex;
-    private Double rotation;
-    private String customProperties;
     
     @CreationTimestamp
     private LocalDateTime createdAt;
@@ -54,9 +41,6 @@ public class Model {
     private DatabaseDiagram databaseDiagram;
     
     @OneToMany(mappedBy = "model")
-    private List<Field> fields;
+    private List<Attribute> attributes;
     
-    public enum ModelType {
-        TABLE, VIEW, STORED_PROCEDURE, FUNCTION, TRIGGER, INDEX, SEQUENCE, CUSTOM
-    }
 }

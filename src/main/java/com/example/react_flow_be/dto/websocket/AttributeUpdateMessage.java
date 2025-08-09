@@ -7,10 +7,10 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class FieldUpdateMessage {
-    private Long fieldId;
-    private String fieldName;
-    private String fieldType;
+public class AttributeUpdateMessage {
+    private Long attributeId;
+    private String attributeName;
+    private String attributeType;
     private String modelName;
     private String nodeId;
     private Boolean isNullable;

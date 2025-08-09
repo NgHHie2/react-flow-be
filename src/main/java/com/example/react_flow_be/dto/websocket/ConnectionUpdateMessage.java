@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ConnectionUpdateMessage {
     private Long connectionId;
-    private Long fieldId;
+    private Long attributeId;
     private String sourceModelName;
     private String targetModelName;
     private String connectionType;

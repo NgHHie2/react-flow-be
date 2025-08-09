@@ -14,7 +14,7 @@ import java.util.Optional;
 public class ModelService {
     
     private final ModelRepository modelRepository;
-    private final FieldService fieldService;
+    private final AttributeService attributeService;
     
     @Transactional
     public boolean updateModelPosition(String nodeId, Double positionX, Double positionY) {
@@ -37,14 +37,6 @@ public class ModelService {
         model.setName(name);
         model.setPositionX(x);
         model.setPositionY(y);
-        model.setWidth(200.0);
-        model.setHeight(120.0);
-        model.setBackgroundColor(isChild ? "#f1f5f9" : "#ffffff");
-        model.setBorderColor("#e2e8f0");
-        model.setBorderWidth(2);
-        model.setBorderRadius(8);
-        model.setZIndex(1);
-        model.setModelType(Model.ModelType.TABLE);
         model.setDatabaseDiagram(databaseDiagram);
         
         return modelRepository.save(model);
@@ -55,19 +47,9 @@ public class ModelService {
             model.getId(),
             model.getNodeId(),
             model.getName(),
-            model.getModelType().name(),
             model.getPositionX(),
             model.getPositionY(),
-            model.getWidth(),
-            model.getHeight(),
-            model.getBackgroundColor(),
-            model.getBorderColor(),
-            model.getBorderWidth(),
-            model.getBorderStyle(),
-            model.getBorderRadius(),
-            model.getZIndex(),
-            model.getRotation(),
-            fieldService.convertToDtoList(model.getFields())
+            attributeService.convertToDtoList(model.getAttributes())
         );
     }
     

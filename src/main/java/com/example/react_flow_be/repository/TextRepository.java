@@ -9,6 +9,6 @@ import java.util.Optional;
 
 @Repository
 public interface TextRepository extends JpaRepository<Text, Long> {
-    List<Text> findByDiagramId(Long diagramId);
-    Optional<Text> findByNodeId(String nodeId);
+    List<Text> findByShapeId(Long shapeId);
+    // Không cần method tìm theo string id vì Text không có unique string identifier
 }
