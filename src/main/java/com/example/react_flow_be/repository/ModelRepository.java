@@ -12,4 +12,6 @@ public interface ModelRepository extends JpaRepository<Model, Long> {
     Optional<Model> findByName(String name);
     Optional<Model> findByNodeId(String nodeId);
     List<Model> findByDatabaseDiagramId(Long databaseDiagramId);
+    Optional<Model> findByNodeIdAndDatabaseDiagram_Id(String nodeId, Long databaseDiagramId);
+
 }

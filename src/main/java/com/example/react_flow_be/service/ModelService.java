@@ -17,8 +17,8 @@ public class ModelService {
     private final AttributeService attributeService;
     
     @Transactional
-    public boolean updateModelPosition(String nodeId, Double positionX, Double positionY) {
-        Optional<Model> modelOpt = modelRepository.findByNodeId(nodeId);
+    public boolean updateModelPosition(String nodeId, Double positionX, Double positionY, Long diagramId) {
+        Optional<Model> modelOpt = modelRepository.findByNodeIdAndDatabaseDiagram_Id(nodeId, diagramId);
         if (modelOpt.isPresent()) {
             Model model = modelOpt.get();
             model.setPositionX(positionX);

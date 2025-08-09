@@ -33,7 +33,8 @@ public class SchemaWebSocketController {
             boolean updated = schemaVisualizerService.updateModelPosition(
                     message.getNodeId(), // Changed from getModelName() to getNodeId()
                     message.getPositionX(),
-                    message.getPositionY()
+                    message.getPositionY(),
+                    message.getDiagramId()
             );
             
             if (updated) {

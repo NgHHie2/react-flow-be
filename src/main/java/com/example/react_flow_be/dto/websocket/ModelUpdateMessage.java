@@ -16,4 +16,5 @@ public class ModelUpdateMessage {
     private Double height;
     private String backgroundColor;
     private String sessionId;
+    private Long diagramId;
 }

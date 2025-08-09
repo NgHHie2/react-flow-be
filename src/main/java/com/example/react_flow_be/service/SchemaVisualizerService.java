@@ -164,8 +164,8 @@ public class SchemaVisualizerService {
     }
     
     @Transactional
-    public boolean updateModelPosition(String modelName, Double positionX, Double positionY) {
-        return modelService.updateModelPosition(modelName, positionX, positionY);
+    public boolean updateModelPosition(String modelName, Double positionX, Double positionY, Long diagramId) {
+        return modelService.updateModelPosition(modelName, positionX, positionY, diagramId);
     }
     
     @Transactional
