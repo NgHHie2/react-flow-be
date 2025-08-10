@@ -1,3 +1,4 @@
+// src/main/java/com/example/react_flow_be/service/SchemaVisualizerService.java - Updated
 package com.example.react_flow_be.service;
 
 import com.example.react_flow_be.dto.*;
@@ -102,7 +103,7 @@ public class SchemaVisualizerService {
         attributeService.createAttribute(commentModel, "created_at", "TIMESTAMP", false, 6, false, false);
         attributeService.createAttribute(commentModel, "updated_at", "TIMESTAMP", false, 7, false, false);
         
-        // Create Connections - tạo sau khi có Attributes
+        // Create Connections
         Attribute postUserIdAttribute = attributeService.getAttributeByModelAndName(postModel, "user_id");
         Attribute commentPostIdAttribute = attributeService.getAttributeByModelAndName(commentModel, "post_id");
         Attribute commentUserIdAttribute = attributeService.getAttributeByModelAndName(commentModel, "user_id");
@@ -133,15 +134,33 @@ public class SchemaVisualizerService {
         }
     }
 
-    
-    
     @Transactional
-    public boolean updateModelPosition(String modelName, Double positionX, Double positionY, Long diagramId) {
-        return modelService.updateModelPosition(modelName, positionX, positionY, diagramId);
+    public boolean updateModelPosition(Long modelId, Double positionX, Double positionY) {
+        return modelService.updateModelPosition(modelId, positionX, positionY);
     }
     
     @Transactional
     public boolean updateAttribute(Long attributeId, String attributeName, String attributeType) {
         return attributeService.updateAttribute(attributeId, attributeName, attributeType);
+    }
+
+    @Transactional
+    public boolean togglePrimaryKey(Long attributeId) {
+        return attributeService.togglePrimaryKey(attributeId);
+    }
+
+    @Transactional
+    public boolean toggleForeignKey(Long attributeId) {
+        return attributeService.toggleForeignKey(attributeId);
+    }
+
+    @Transactional
+    public Long addAttribute(Long modelId, String attributeName, String dataType) {
+        return attributeService.addAttribute(modelId, attributeName, dataType);
+    }
+
+    @Transactional
+    public boolean deleteAttribute(Long attributeId) {
+        return attributeService.deleteAttribute(attributeId);
     }
 }

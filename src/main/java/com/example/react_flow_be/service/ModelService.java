@@ -17,14 +17,16 @@ public class ModelService {
     private final AttributeService attributeService;
     
     @Transactional
-    public boolean updateModelPosition(String nodeId, Double positionX, Double positionY, Long diagramId) {
-        Optional<Model> modelOpt = modelRepository.findByNodeIdAndDatabaseDiagram_Id(nodeId, diagramId);
+    public boolean updateModelPosition(Long modelId, Double positionX, Double positionY) {
+        // Use modelId for more accurate lookup
+        Optional<Model> modelOpt = modelRepository.findById(modelId);
         if (modelOpt.isPresent()) {
             Model model = modelOpt.get();
             model.setPositionX(positionX);
             model.setPositionY(positionY);
             modelRepository.save(model);
             return true;
+            
         }
         return false;
     }
