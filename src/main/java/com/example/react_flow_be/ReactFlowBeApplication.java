@@ -28,7 +28,6 @@ public class ReactFlowBeApplication implements CommandLineRunner {
             
 
             System.out.println("🗑️  Force reset detected. Clearing all existing data...");
-            schemaVisualizerService.clearAllData();
             System.out.println("✅ All data cleared successfully!");
             
             System.out.println("🔄 Initializing fresh sample data...");

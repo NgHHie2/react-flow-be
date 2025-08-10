@@ -133,35 +133,7 @@ public class SchemaVisualizerService {
         }
     }
 
-    @Transactional
-    public void clearAllData() {
-        try {
-            // Clear in correct order to respect foreign key constraints
-            System.out.println("🔄 Clearing connections...");
-            connectionRepository.deleteAll();
-            
-            System.out.println("🔄 Clearing Attributes...");
-            attributeRepository.deleteAll();
-            
-            System.out.println("🔄 Clearing models...");
-            modelRepository.deleteAll();
-            
-            System.out.println("🔄 Clearing database diagrams...");
-            databaseDiagramRepository.deleteAll();
-            
-            System.out.println("🔄 Clearing folders...");
-            folderRepository.deleteAll();
-            
-            System.out.println("🔄 Clearing users...");
-            userRepository.deleteAll();
-            
-            System.out.println("✅ All data cleared successfully!");
-            
-        } catch (Exception e) {
-            System.err.println("❌ Error clearing data: " + e.getMessage());
-            throw new RuntimeException("Failed to clear data", e);
-        }
-    }
+    
     
     @Transactional
     public boolean updateModelPosition(String modelName, Double positionX, Double positionY, Long diagramId) {

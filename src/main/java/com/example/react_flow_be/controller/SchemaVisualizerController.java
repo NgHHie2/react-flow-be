@@ -31,19 +31,5 @@ public class SchemaVisualizerController {
         }
     }
     
-    @PostMapping("/clear")
-    public ResponseEntity<String> clearAllData() {
-        try {
-            schemaVisualizerService.clearAllData();
-            return ResponseEntity.ok("All data cleared successfully");
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                .body("Failed to clear data: " + e.getMessage());
-        }
-    }
-    
-    @GetMapping("/health")
-    public ResponseEntity<String> healthCheck() {
-        return ResponseEntity.ok("Schema Visualizer API is running");
-    }
+
 }
