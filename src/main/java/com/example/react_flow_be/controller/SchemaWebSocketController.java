@@ -108,6 +108,37 @@ public class SchemaWebSocketController {
         );
     }
 
+    @MessageMapping("/connectForeignKey")
+    public void connectForeignKey(ForeignKeyConnectMessage message, SimpMessageHeaderAccessor headerAccessor) {
+        log.info("Received FK connect request: attributeId={}, target={}.{}", 
+            message.getAttributeId(), message.getTargetModelName(), message.getTargetAttributeName());
+        
+        handleWebSocketMessage(
+            "FOREIGN_KEY_CONNECT",
+            message,
+            headerAccessor,
+            () -> schemaVisualizerService.createForeignKeyConnection(
+                message.getAttributeId(),
+                message.getTargetModelName(),
+                message.getTargetAttributeName(),
+                message.getTargetAttributeId(),
+                message.getForeignKeyName()
+            )
+        );
+    }
+
+    @MessageMapping("/disconnectForeignKey")
+    public void disconnectForeignKey(ForeignKeyDisconnectMessage message, SimpMessageHeaderAccessor headerAccessor) {
+        log.info("Received FK disconnect request: attributeId={}", message.getAttributeId());
+        
+        handleWebSocketMessage(
+            "FOREIGN_KEY_DISCONNECT",
+            message,
+            headerAccessor,
+            () -> schemaVisualizerService.removeForeignKeyConnection(message.getAttributeId())
+        );
+    }
+
     /**
      * Generic method to handle WebSocket messages with filtering support
      */

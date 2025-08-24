@@ -1,10 +1,11 @@
-// src/main/java/com/example/react_flow_be/service/SchemaVisualizerService.java - Updated
+// src/main/java/com/example/react_flow_be/service/SchemaVisualizerService.java - Enhanced
 package com.example.react_flow_be.service;
 
 import com.example.react_flow_be.dto.*;
 import com.example.react_flow_be.entity.*;
 import com.example.react_flow_be.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,6 +14,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class SchemaVisualizerService {
     
     private final DatabaseDiagramService databaseDiagramService;
@@ -96,6 +98,9 @@ public class SchemaVisualizerService {
         // Create Attributes for Comment model
         attributeService.createAttribute(commentModel, "id", "BIGINT", false, 0, false, true);
         attributeService.createAttribute(commentModel, "content", "TEXT", false, 1, false, false);
+        // Create Attributes for Comment model
+        attributeService.createAttribute(commentModel, "id", "BIGINT", false, 0, false, true);
+        attributeService.createAttribute(commentModel, "content", "TEXT", false, 1, false, false);
         attributeService.createAttribute(commentModel, "post_id", "BIGINT", true, 2, false, false);
         attributeService.createAttribute(commentModel, "user_id", "BIGINT", true, 3, false, false);
         attributeService.createAttribute(commentModel, "parent_comment_id", "BIGINT", true, 4, true, false);
@@ -132,6 +137,8 @@ public class SchemaVisualizerService {
             connectionService.createConnection(commentParentIdAttribute, commentModel, "id",
                 "fk_comment_parent", "#9CA3AF");
         }
+        
+        log.info("Sample data initialized successfully");
     }
 
     @Transactional
@@ -162,5 +169,24 @@ public class SchemaVisualizerService {
     @Transactional
     public boolean deleteAttribute(Long attributeId) {
         return attributeService.deleteAttribute(attributeId);
+    }
+    
+    @Transactional 
+    public boolean createForeignKeyConnection(
+            Long attributeId,
+            String targetModelName, 
+            String targetAttributeName,
+            Long targetAttributeId,
+            String foreignKeyName) {
+        log.info("Creating FK connection: attributeId={}, target={}.{}", 
+            attributeId, targetModelName, targetAttributeName);
+        return connectionService.createForeignKeyConnection(
+            attributeId, targetModelName, targetAttributeName, targetAttributeId, foreignKeyName);
+    }
+    
+    @Transactional
+    public boolean removeForeignKeyConnection(Long attributeId) {
+        log.info("Removing FK connection for attributeId={}", attributeId);
+        return connectionService.removeForeignKeyConnection(attributeId);
     }
 }

@@ -1,4 +1,4 @@
-// src/main/java/com/example/react_flow_be/service/AttributeService.java - Fixed
+// src/main/java/com/example/react_flow_be/service/AttributeService.java - Enhanced
 package com.example.react_flow_be.service;
 
 import com.example.react_flow_be.dto.ConnectionDto;
@@ -8,6 +8,7 @@ import com.example.react_flow_be.entity.Model;
 import com.example.react_flow_be.repository.AttributeRepository;
 import com.example.react_flow_be.repository.ModelRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,10 +18,12 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AttributeService {
     
     private final AttributeRepository attributeRepository;
     private final ModelRepository modelRepository;
+    private final ConnectionService connectionService;
     
     @Transactional
     public boolean updateAttribute(Long attributeId, String attributeName, String attributeType) {
@@ -60,6 +63,7 @@ public class AttributeService {
             }
             return false;
         } catch (Exception e) {
+            log.error("Error updating attribute {}: {}", attributeId, e.getMessage(), e);
             return false;
         }
     }
@@ -71,12 +75,26 @@ public class AttributeService {
             if (attributeOpt.isPresent()) {
                 Attribute attribute = attributeOpt.get();
                 
-                // Simple toggle - no restriction on multiple PKs
                 boolean newPKStatus = !attribute.getIsPrimaryKey();
+                
+                // If removing PK status and it has connections, remove them
+                if (!newPKStatus && attribute.getIsPrimaryKey()) {
+                    // This PK is being removed, remove any connections TO this attribute
+                    connectionService.removeConnectionsToAttribute(attribute.getModel().getName(), attribute.getName());
+                    log.info("Removed connections TO attribute {}.{} when removing PK status", 
+                        attribute.getModel().getName(), attribute.getName());
+                }
+                
                 attribute.setIsPrimaryKey(newPKStatus);
                 
                 // If setting as PK, remove FK status and add index
                 if (newPKStatus) {
+                    // If currently FK, remove its connection first
+                    if (attribute.getIsForeignKey()) {
+                        connectionService.removeConnectionsForAttribute(attributeId);
+                        log.info("Removed FK connection when converting attribute {} to PK", attributeId);
+                    }
+                    
                     attribute.setIsForeignKey(false);
                     attribute.setIsNullable(false);
                     attribute.setHasIndex(true);
@@ -93,10 +111,12 @@ public class AttributeService {
                 }
                 
                 attributeRepository.save(attribute);
+                log.info("Toggled PK status for attribute {} to {}", attributeId, newPKStatus);
                 return true;
             }
             return false;
         } catch (Exception e) {
+            log.error("Error toggling primary key for attribute {}: {}", attributeId, e.getMessage(), e);
             return false;
         }
     }
@@ -108,12 +128,25 @@ public class AttributeService {
             if (attributeOpt.isPresent()) {
                 Attribute attribute = attributeOpt.get();
                 
-                // Simple toggle
                 boolean newFKStatus = !attribute.getIsForeignKey();
+                
+                // If removing FK status, remove its connection
+                if (!newFKStatus && attribute.getIsForeignKey()) {
+                    connectionService.removeConnectionsForAttribute(attributeId);
+                    log.info("Removed FK connection when converting attribute {} to normal", attributeId);
+                }
+                
                 attribute.setIsForeignKey(newFKStatus);
                 
                 // If setting as FK, remove PK status and add index
                 if (newFKStatus) {
+                    // If currently PK, remove connections TO this attribute
+                    if (attribute.getIsPrimaryKey()) {
+                        connectionService.removeConnectionsToAttribute(attribute.getModel().getName(), attribute.getName());
+                        log.info("Removed connections TO attribute {}.{} when converting PK to FK", 
+                            attribute.getModel().getName(), attribute.getName());
+                    }
+                    
                     attribute.setIsPrimaryKey(false);
                     attribute.setHasIndex(true);
                     attribute.setIndexName("idx_" + attribute.getModel().getName().toLowerCase() + "_" + attribute.getName());
@@ -128,10 +161,12 @@ public class AttributeService {
                 }
                 
                 attributeRepository.save(attribute);
+                log.info("Toggled FK status for attribute {} to {}", attributeId, newFKStatus);
                 return true;
             }
             return false;
         } catch (Exception e) {
+            log.error("Error toggling foreign key for attribute {}: {}", attributeId, e.getMessage(), e);
             return false;
         }
     }
@@ -166,10 +201,12 @@ public class AttributeService {
                 }
                 
                 Attribute savedAttribute = attributeRepository.save(newAttribute);
+                log.info("Added new attribute {} to model {}", attributeName, model.getName());
                 return savedAttribute.getId();
             }
             return null;
         } catch (Exception e) {
+            log.error("Error adding attribute to model {}: {}", modelId, e.getMessage(), e);
             return null;
         }
     }
@@ -188,7 +225,20 @@ public class AttributeService {
                 
                 // Don't allow deletion if it's the only attribute
                 if (modelAttributes.size() <= 1) {
+                    log.warn("Cannot delete the only attribute in model {}", attribute.getModel().getName());
                     return false;
+                }
+                
+                // Remove any connections related to this attribute
+                if (attribute.getIsForeignKey()) {
+                    connectionService.removeConnectionsForAttribute(attributeId);
+                    log.info("Removed FK connections when deleting attribute {}", attributeId);
+                }
+                
+                if (attribute.getIsPrimaryKey()) {
+                    connectionService.removeConnectionsToAttribute(attribute.getModel().getName(), attribute.getName());
+                    log.info("Removed connections TO attribute {}.{} when deleting PK", 
+                        attribute.getModel().getName(), attribute.getName());
                 }
                 
                 attributeRepository.delete(attribute);
@@ -203,10 +253,12 @@ public class AttributeService {
                     attributeRepository.save(attr);
                 }
                 
+                log.info("Deleted attribute {} from model {}", attributeId, attribute.getModel().getName());
                 return true;
             }
             return false;
         } catch (Exception e) {
+            log.error("Error deleting attribute {}: {}", attributeId, e.getMessage(), e);
             return false;
         }
     }
