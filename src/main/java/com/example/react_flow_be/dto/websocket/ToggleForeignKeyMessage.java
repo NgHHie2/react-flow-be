@@ -7,9 +7,13 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ToggleForeignKeyMessage {
+public class ToggleForeignKeyMessage implements BaseWebSocketMessage {
     private String modelName;
     private Long modelId;
     private Long attributeId;
     private String sessionId;
+    
+    // Message tracking fields
+    private String messageId;
+    private Long clientTimestamp;
 }

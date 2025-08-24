@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ModelUpdateMessage {
+public class ModelUpdateMessage implements BaseWebSocketMessage {
     private String nodeId;
     private String modelName;
     private Double positionX;
@@ -17,4 +17,8 @@ public class ModelUpdateMessage {
     private String backgroundColor;
     private String sessionId;
     private Long modelId;
+    
+    // Message tracking fields
+    private String messageId;
+    private Long clientTimestamp;
 }

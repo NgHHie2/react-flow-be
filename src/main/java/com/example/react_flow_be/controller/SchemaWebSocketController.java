@@ -10,6 +10,8 @@ import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
+import java.util.function.Supplier;
+
 @Controller
 @RequiredArgsConstructor
 @Slf4j
@@ -19,252 +21,174 @@ public class SchemaWebSocketController {
     private final SimpMessagingTemplate messagingTemplate;
     
     @MessageMapping("/updateNodePosition")
-    public void updateNodePosition(
-            ModelUpdateMessage message,
-            SimpMessageHeaderAccessor headerAccessor
-    ) {
-        try {
-            String sessionId = headerAccessor.getSessionId();
-            message.setSessionId(sessionId);
-            
-            log.info("Updating node position: {} to ({}, {})", 
-                    message.getNodeId(), message.getPositionX(), message.getPositionY());
-            
-            boolean updated = schemaVisualizerService.updateModelPosition(
-                    message.getModelId(), 
-                    message.getPositionX(),
-                    message.getPositionY()
-            );
-            
-            if (updated) {
-                WebSocketResponse<ModelUpdateMessage> response = 
-                    WebSocketResponse.success("NODE_POSITION_UPDATE", message, sessionId);
-                messagingTemplate.convertAndSend("/topic/schema-updates", response);
-            } else {
-                WebSocketResponse<String> errorResponse = 
-                    WebSocketResponse.error("Failed to update node position", sessionId);
-                messagingTemplate.convertAndSendToUser(
-                    sessionId, "/queue/errors", errorResponse
-                );
-            }
-            
-        } catch (Exception e) {
-            log.error("Error updating node position", e);
-            String sessionId = headerAccessor.getSessionId();
-            WebSocketResponse<String> errorResponse = 
-                WebSocketResponse.error("Internal server error: " + e.getMessage(), sessionId);
-            messagingTemplate.convertAndSendToUser(
-                sessionId, "/queue/errors", errorResponse
-            );
-        }
+    public void updateNodePosition(ModelUpdateMessage message, SimpMessageHeaderAccessor headerAccessor) {
+        handleWebSocketMessage(
+            "NODE_POSITION_UPDATE",
+            message,
+            headerAccessor,
+            () -> schemaVisualizerService.updateModelPosition(
+                message.getModelId(), 
+                message.getPositionX(), 
+                message.getPositionY()
+            )
+        );
     }
     
     @MessageMapping("/updateAttribute")
-    public void updateAttribute(
-            AttributeUpdateMessage message,
-            SimpMessageHeaderAccessor headerAccessor
-    ) {
-        try {
-            String sessionId = headerAccessor.getSessionId();
-            message.setSessionId(sessionId);
-            
-            log.info("Updating Attribute: {} - {} ({})", 
-                    message.getAttributeName(), message.getAttributeType(), message.getModelName());
-            
-            boolean updated = schemaVisualizerService.updateAttribute(
-                    message.getAttributeId(),
-                    message.getAttributeName(),
-                    message.getAttributeType()
-            );
-            
-            if (updated) {
-                WebSocketResponse<AttributeUpdateMessage> response = 
-                    WebSocketResponse.success("FIELD_UPDATE", message, sessionId);
-                messagingTemplate.convertAndSend("/topic/schema-updates", response);
-            } else {
-                WebSocketResponse<String> errorResponse = 
-                    WebSocketResponse.error("Failed to update Attribute", sessionId);
-                messagingTemplate.convertAndSendToUser(
-                    sessionId, "/queue/errors", errorResponse
-                );
-            }
-            
-        } catch (Exception e) {
-            log.error("Error updating Attribute", e);
-            String sessionId = headerAccessor.getSessionId();
-            WebSocketResponse<String> errorResponse = 
-                WebSocketResponse.error("Internal server error: " + e.getMessage(), sessionId);
-            messagingTemplate.convertAndSendToUser(
-                sessionId, "/queue/errors", errorResponse
-            );
-        }
+    public void updateAttribute(AttributeUpdateMessage message, SimpMessageHeaderAccessor headerAccessor) {
+        handleWebSocketMessage(
+            "FIELD_UPDATE",
+            message,
+            headerAccessor,
+            () -> schemaVisualizerService.updateAttribute(
+                message.getAttributeId(),
+                message.getAttributeName(),
+                message.getAttributeType()
+            )
+        );
     }
 
     @MessageMapping("/togglePrimaryKey")
-    public void togglePrimaryKey(
-            TogglePrimaryKeyMessage message,
-            SimpMessageHeaderAccessor headerAccessor
-    ) {
-        try {
-            String sessionId = headerAccessor.getSessionId();
-            message.setSessionId(sessionId);
-            
-            log.info("Toggling primary key for attribute ID: {} in model: {}", 
-                    message.getAttributeId(), message.getModelName());
-            
-            boolean updated = schemaVisualizerService.togglePrimaryKey(
-                    message.getAttributeId()
-            );
-            
-            if (updated) {
-                WebSocketResponse<TogglePrimaryKeyMessage> response = 
-                    WebSocketResponse.success("TOGGLE_PRIMARY_KEY", message, sessionId);
-                messagingTemplate.convertAndSend("/topic/schema-updates", response);
-            } else {
-                WebSocketResponse<String> errorResponse = 
-                    WebSocketResponse.error("Failed to toggle primary key", sessionId);
-                messagingTemplate.convertAndSendToUser(
-                    sessionId, "/queue/errors", errorResponse
-                );
-            }
-            
-        } catch (Exception e) {
-            log.error("Error toggling primary key", e);
-            String sessionId = headerAccessor.getSessionId();
-            WebSocketResponse<String> errorResponse = 
-                WebSocketResponse.error("Internal server error: " + e.getMessage(), sessionId);
-            messagingTemplate.convertAndSendToUser(
-                sessionId, "/queue/errors", errorResponse
-            );
-        }
+    public void togglePrimaryKey(TogglePrimaryKeyMessage message, SimpMessageHeaderAccessor headerAccessor) {
+        handleWebSocketMessage(
+            "TOGGLE_PRIMARY_KEY",
+            message,
+            headerAccessor,
+            () -> schemaVisualizerService.togglePrimaryKey(message.getAttributeId())
+        );
     }
 
     @MessageMapping("/toggleForeignKey")
-    public void toggleForeignKey(
-            ToggleForeignKeyMessage message,
-            SimpMessageHeaderAccessor headerAccessor
-    ) {
-        try {
-            String sessionId = headerAccessor.getSessionId();
-            message.setSessionId(sessionId);
-            
-            log.info("Toggling foreign key for attribute ID: {} in model: {}", 
-                    message.getAttributeId(), message.getModelName());
-            
-            boolean updated = schemaVisualizerService.toggleForeignKey(
-                    message.getAttributeId()
-            );
-            
-            if (updated) {
-                WebSocketResponse<ToggleForeignKeyMessage> response = 
-                    WebSocketResponse.success("TOGGLE_FOREIGN_KEY", message, sessionId);
-                messagingTemplate.convertAndSend("/topic/schema-updates", response);
-            } else {
-                WebSocketResponse<String> errorResponse = 
-                    WebSocketResponse.error("Failed to toggle foreign key", sessionId);
-                messagingTemplate.convertAndSendToUser(
-                    sessionId, "/queue/errors", errorResponse
-                );
-            }
-            
-        } catch (Exception e) {
-            log.error("Error toggling foreign key", e);
-            String sessionId = headerAccessor.getSessionId();
-            WebSocketResponse<String> errorResponse = 
-                WebSocketResponse.error("Internal server error: " + e.getMessage(), sessionId);
-            messagingTemplate.convertAndSendToUser(
-                sessionId, "/queue/errors", errorResponse
-            );
-        }
+    public void toggleForeignKey(ToggleForeignKeyMessage message, SimpMessageHeaderAccessor headerAccessor) {
+        handleWebSocketMessage(
+            "TOGGLE_FOREIGN_KEY",
+            message,
+            headerAccessor,
+            () -> schemaVisualizerService.toggleForeignKey(message.getAttributeId())
+        );
     }
 
     @MessageMapping("/addAttribute")
-    public void addAttribute(
-            AddAttributeMessage message,
-            SimpMessageHeaderAccessor headerAccessor
-    ) {
-        try {
-            String sessionId = headerAccessor.getSessionId();
-            message.setSessionId(sessionId);
-            
-            log.info("Adding attribute: {} ({}) to model: {}", 
-                    message.getAttributeName(), message.getDataType(), message.getModelName());
-            
-            Long attributeId = schemaVisualizerService.addAttribute(
+    public void addAttribute(AddAttributeMessage message, SimpMessageHeaderAccessor headerAccessor) {
+        handleWebSocketMessage(
+            "ADD_ATTRIBUTE",
+            message,
+            headerAccessor,
+            () -> {
+                Long attributeId = schemaVisualizerService.addAttribute(
                     message.getModelId(),
                     message.getAttributeName(),
                     message.getDataType()
-            );
-            
-            if (attributeId != null) {
-                // Create response with real attribute ID
-                AddAttributeResponseMessage responseMessage = new AddAttributeResponseMessage(
-                    message.getModelName(),
-                    message.getModelId(),
-                    message.getAttributeName(),
-                    message.getDataType(),
-                    attributeId, // Real ID from database
-                    sessionId
                 );
                 
-                WebSocketResponse<AddAttributeResponseMessage> response = 
-                    WebSocketResponse.success("ADD_ATTRIBUTE", responseMessage, sessionId);
-                messagingTemplate.convertAndSend("/topic/schema-updates", response);
-            } else {
-                WebSocketResponse<String> errorResponse = 
-                    WebSocketResponse.error("Failed to add attribute", sessionId);
-                messagingTemplate.convertAndSendToUser(
-                    sessionId, "/queue/errors", errorResponse
-                );
+                if (attributeId != null) {
+                    return new AddAttributeResponseMessage(
+                        message.getModelName(),
+                        message.getModelId(),
+                        message.getAttributeName(),
+                        message.getDataType(),
+                        attributeId,
+                        message.getSessionId(),
+                        message.getMessageId(),
+                        message.getClientTimestamp()
+                    );
+                }
+                return null;
             }
-            
-        } catch (Exception e) {
-            log.error("Error adding attribute", e);
-            String sessionId = headerAccessor.getSessionId();
-            WebSocketResponse<String> errorResponse = 
-                WebSocketResponse.error("Internal server error: " + e.getMessage(), sessionId);
-            messagingTemplate.convertAndSendToUser(
-                sessionId, "/queue/errors", errorResponse
-            );
-        }
+        );
     }
 
     @MessageMapping("/deleteAttribute")
-    public void deleteAttribute(
-            DeleteAttributeMessage message,
-            SimpMessageHeaderAccessor headerAccessor
+    public void deleteAttribute(DeleteAttributeMessage message, SimpMessageHeaderAccessor headerAccessor) {
+        handleWebSocketMessage(
+            "DELETE_ATTRIBUTE",
+            message,
+            headerAccessor,
+            () -> schemaVisualizerService.deleteAttribute(message.getAttributeId())
+        );
+    }
+
+    /**
+     * Generic method to handle WebSocket messages with filtering support
+     */
+    private <T, R> void handleWebSocketMessage(
+            String messageType,
+            T message,
+            SimpMessageHeaderAccessor headerAccessor,
+            Supplier<R> serviceCall
     ) {
+        String sessionId = headerAccessor.getSessionId();
+        
         try {
-            String sessionId = headerAccessor.getSessionId();
-            message.setSessionId(sessionId);
+            // Set session ID if message supports it
+            if (message instanceof BaseWebSocketMessage) {
+                ((BaseWebSocketMessage) message).setSessionId(sessionId);
+            }
             
-            log.info("Deleting attribute ID: {} from model: {}", 
-                    message.getAttributeId(), message.getModelName());
+            log.info("Processing {}: {}", messageType, message);
             
-            boolean deleted = schemaVisualizerService.deleteAttribute(
-                    message.getAttributeId()
-            );
+            // Execute service call
+            R result = serviceCall.get();
             
-            if (deleted) {
-                WebSocketResponse<DeleteAttributeMessage> response = 
-                    WebSocketResponse.success("DELETE_ATTRIBUTE", message, sessionId);
+            // Check if operation was successful
+            boolean success = isSuccessfulResult(result);
+            
+            if (success) {
+                // Use result if available, otherwise use original message
+                Object responseData = (result != null && !(result instanceof Boolean)) ? result : message;
+                
+                // Extract messageId from the original message for client-side filtering
+                String messageId = extractMessageId(message);
+                
+                // Create response with tracking info for client-side filtering
+                WebSocketResponse<Object> response;
+                if (messageId != null) {
+                    response = WebSocketResponse.successWithTracking(messageType, responseData, sessionId, messageId);
+                } else {
+                    response = WebSocketResponse.success(messageType, responseData, sessionId);
+                }
+                
+                // Broadcast to all clients (they will filter on client side)
                 messagingTemplate.convertAndSend("/topic/schema-updates", response);
+                
+                log.info("Successfully processed {} with sessionId: {}", messageType, sessionId);
             } else {
-                WebSocketResponse<String> errorResponse = 
-                    WebSocketResponse.error("Failed to delete attribute", sessionId);
-                messagingTemplate.convertAndSendToUser(
-                    sessionId, "/queue/errors", errorResponse
-                );
+                sendErrorToUser(sessionId, "Failed to process " + messageType.toLowerCase().replace("_", " "));
             }
             
         } catch (Exception e) {
-            log.error("Error deleting attribute", e);
-            String sessionId = headerAccessor.getSessionId();
-            WebSocketResponse<String> errorResponse = 
-                WebSocketResponse.error("Internal server error: " + e.getMessage(), sessionId);
-            messagingTemplate.convertAndSendToUser(
-                sessionId, "/queue/errors", errorResponse
-            );
+            log.error("Error processing {}: {}", messageType, e.getMessage(), e);
+            sendErrorToUser(sessionId, "Internal server error: " + e.getMessage());
         }
+    }
+    
+    /**
+     * Extract messageId from message if available (for client-side filtering)
+     */
+    private String extractMessageId(Object message) {
+        if (message instanceof BaseWebSocketMessage) {
+            return ((BaseWebSocketMessage) message).getMessageId();
+        }
+        return null;
+    }
+    
+    /**
+     * Check if the service call result indicates success
+     */
+    private boolean isSuccessfulResult(Object result) {
+        if (result == null) return false;
+        if (result instanceof Boolean) return (Boolean) result;
+        return true;
+    }
+    
+    /**
+     * Send error message to specific user
+     */
+    private void sendErrorToUser(String sessionId, String errorMessage) {
+        WebSocketResponse<String> errorResponse = 
+            WebSocketResponse.error(errorMessage, sessionId);
+        messagingTemplate.convertAndSendToUser(
+            sessionId, "/queue/errors", errorResponse
+        );
     }
 }

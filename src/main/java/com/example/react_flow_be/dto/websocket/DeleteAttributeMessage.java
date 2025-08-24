@@ -7,9 +7,13 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class DeleteAttributeMessage {
+public class DeleteAttributeMessage implements BaseWebSocketMessage {
     private String modelName;
     private Long modelId;
     private Long attributeId;
     private String sessionId;
+    
+    // Message tracking fields
+    private String messageId;
+    private Long clientTimestamp;
 }

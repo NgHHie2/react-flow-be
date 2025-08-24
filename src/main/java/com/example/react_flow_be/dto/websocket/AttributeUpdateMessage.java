@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AttributeUpdateMessage {
+public class AttributeUpdateMessage implements BaseWebSocketMessage {
     private Long attributeId;
     private String attributeName;
     private String attributeType;
@@ -17,4 +17,8 @@ public class AttributeUpdateMessage {
     private Boolean isPrimaryKey;
     private Boolean isForeignKey;
     private String sessionId;
+    
+    // Message tracking fields
+    private String messageId;
+    private Long clientTimestamp;
 }
