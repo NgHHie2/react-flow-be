@@ -39,7 +39,7 @@ public class Attribute {
     @JoinColumn(name = "model_id")
     private Model model;
     
-    @OneToOne(mappedBy = "attribute")
+    @OneToOne(mappedBy = "attribute", cascade = CascadeType.ALL, orphanRemoval = true)
     private Connection connection;
     
     public enum IndexType {

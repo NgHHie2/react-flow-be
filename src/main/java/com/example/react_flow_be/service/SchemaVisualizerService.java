@@ -98,9 +98,6 @@ public class SchemaVisualizerService {
         // Create Attributes for Comment model
         attributeService.createAttribute(commentModel, "id", "BIGINT", false, 0, false, true);
         attributeService.createAttribute(commentModel, "content", "TEXT", false, 1, false, false);
-        // Create Attributes for Comment model
-        attributeService.createAttribute(commentModel, "id", "BIGINT", false, 0, false, true);
-        attributeService.createAttribute(commentModel, "content", "TEXT", false, 1, false, false);
         attributeService.createAttribute(commentModel, "post_id", "BIGINT", true, 2, false, false);
         attributeService.createAttribute(commentModel, "user_id", "BIGINT", true, 3, false, false);
         attributeService.createAttribute(commentModel, "parent_comment_id", "BIGINT", true, 4, true, false);

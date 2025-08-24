@@ -68,7 +68,7 @@ public class ConnectionService {
             Attribute sourceAttribute = sourceAttributeOpt.get();
             
             // Find target model
-            Optional<Model> targetModelOpt = modelRepository.findByName(targetModelName);
+            Optional<Model> targetModelOpt = modelRepository.findByNodeIdAndDatabaseDiagram_Id(targetModelName, sourceAttribute.getModel().getDatabaseDiagram().getId());
             if (!targetModelOpt.isPresent()) {
                 log.error("Target model not found: {}", targetModelName);
                 return false;
@@ -111,8 +111,12 @@ public class ConnectionService {
             log.info("Removing FK connection for attribute: {}", attributeId);
             
             Optional<Connection> connectionOpt = connectionRepository.findByAttributeId(attributeId);
+            Optional<Attribute> attributeOpt = attributeRepository.findById(attributeId);
+            attributeOpt.get().setConnection(null);
+            System.out.println(connectionOpt.get().getId());
             if (connectionOpt.isPresent()) {
-                connectionRepository.delete(connectionOpt.get());
+                // connectionRepository.delete(connectionOpt.get());
+                log.info("id: {}", connectionOpt.get().getId());
                 log.info("Successfully removed FK connection for attribute: {}", attributeId);
                 return true;
             } else {

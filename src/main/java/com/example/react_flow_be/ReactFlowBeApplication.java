@@ -31,7 +31,6 @@ public class ReactFlowBeApplication implements CommandLineRunner {
             System.out.println("✅ All data cleared successfully!");
             
             System.out.println("🔄 Initializing fresh sample data...");
-            schemaVisualizerService.initializeSampleData();
             System.out.println("✅ Sample data initialized successfully!");
             // Check existing data
             System.out.println("🔍 Checking existing data...");

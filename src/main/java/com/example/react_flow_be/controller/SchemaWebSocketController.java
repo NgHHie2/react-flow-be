@@ -70,6 +70,7 @@ public class SchemaWebSocketController {
 
     @MessageMapping("/addAttribute")
     public void addAttribute(AddAttributeMessage message, SimpMessageHeaderAccessor headerAccessor) {
+        log.info("hello: ");
         handleWebSocketMessage(
             "ADD_ATTRIBUTE",
             message,
