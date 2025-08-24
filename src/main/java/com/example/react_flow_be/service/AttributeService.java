@@ -132,7 +132,7 @@ public class AttributeService {
                 
                 // If removing FK status, remove its connection
                 if (!newFKStatus && attribute.getIsForeignKey()) {
-                    connectionService.removeConnectionsForAttribute(attributeId);
+                    connectionService.removeForeignKeyConnection(attributeId);
                     log.info("Removed FK connection when converting attribute {} to normal", attributeId);
                 }
                 
