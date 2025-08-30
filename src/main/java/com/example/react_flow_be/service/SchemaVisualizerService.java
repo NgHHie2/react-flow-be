@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -185,5 +186,107 @@ public class SchemaVisualizerService {
     public boolean removeForeignKeyConnection(Long attributeId) {
         log.info("Removing FK connection for attributeId={}", attributeId);
         return connectionService.removeForeignKeyConnection(attributeId);
+    }
+
+    // Thêm vào SchemaVisualizerService.java
+    @Transactional
+    public Long addModel(Long databaseDiagramId, String modelName, Double positionX, Double positionY) {
+        try {
+            Optional<DatabaseDiagram> diagramOpt = databaseDiagramRepository.findById(databaseDiagramId);
+            if (diagramOpt.isPresent()) {
+                DatabaseDiagram diagram = diagramOpt.get();
+                
+                // Check if model name already exists
+                boolean nameExists = diagram.getModels().stream()
+                    .anyMatch(model -> modelName.equals(model.getName()));
+                
+                if (nameExists) {
+                    log.warn("Model name already exists: {}", modelName);
+                    return null;
+                }
+                
+                Model newModel = modelService.createModel(modelName, positionX, positionY, false, diagram);
+                
+                // Create default ID attribute
+                attributeService.createAttribute(newModel, "id", "BIGINT", false, 0, false, true);
+                
+                log.info("Added new model: {} at position ({}, {})", modelName, positionX, positionY);
+                return newModel.getId();
+            }
+            return null;
+        } catch (Exception e) {
+            log.error("Error adding model: {}", e.getMessage(), e);
+            return null;
+        }
+    }
+
+    @Transactional
+    public boolean updateModelName(Long modelId, String newModelName) {
+        try {
+            Optional<Model> modelOpt = modelRepository.findById(modelId);
+            if (modelOpt.isPresent()) {
+                Model model = modelOpt.get();
+                String oldName = model.getName();
+                
+                // Check if new name already exists in the same diagram
+                boolean nameExists = model.getDatabaseDiagram().getModels().stream()
+                    .anyMatch(m -> !m.getId().equals(modelId) && newModelName.equals(m.getName()));
+                
+                if (nameExists) {
+                    log.warn("Model name already exists: {}", newModelName);
+                    return false;
+                }
+                
+                model.setName(newModelName);
+                model.setNodeId(newModelName);
+                modelRepository.save(model);
+                
+                log.info("Updated model name from {} to {}", oldName, newModelName);
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            log.error("Error updating model name: {}", e.getMessage(), e);
+            return false;
+        }
+    }
+
+    @Transactional
+    public boolean deleteModel(Long modelId) {
+        try {
+            Optional<Model> modelOpt = modelRepository.findById(modelId);
+            if (modelOpt.isPresent()) {
+                Model model = modelOpt.get();
+                String modelName = model.getName();
+                
+                // Check if this model is referenced by any foreign keys
+                List<Connection> incomingConnections = connectionRepository.findByTargetModelId(modelId);
+                if (!incomingConnections.isEmpty()) {
+                    log.warn("Cannot delete model {} - it has {} incoming foreign key references", 
+                        modelName, incomingConnections.size());
+                    return false;
+                }
+                
+                // Remove all outgoing connections from this model's attributes
+                model.getAttributes().forEach(attribute -> {
+                    if (attribute.getConnection() != null) {
+                        connectionService.removeConnectionsForAttribute(attribute.getId());
+                    }
+                });
+                
+                // Delete all attributes first (cascade should handle this but being explicit)
+                attributeRepository.deleteAll(model.getAttributes());
+                
+                // Delete the model
+                modelRepository.delete(model);
+                
+                log.info("Deleted model: {} and its {} attributes", modelName, model.getAttributes().size());
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            log.error("Error deleting model: {}", e.getMessage(), e);
+            return false;
+        }
     }
 }

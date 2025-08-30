@@ -140,6 +140,60 @@ public class SchemaWebSocketController {
         );
     }
 
+    @MessageMapping("/addModel")
+    public void addModel(AddModelMessage message, SimpMessageHeaderAccessor headerAccessor) {
+        handleWebSocketMessage(
+            "ADD_MODEL",
+            message,
+            headerAccessor,
+            () -> {
+                Long modelId = schemaVisualizerService.addModel(
+                    message.getDatabaseDiagramId(),
+                    message.getModelName(),
+                    message.getPositionX(),
+                    message.getPositionY()
+                );
+                
+                if (modelId != null) {
+                    return new AddModelResponseMessage(
+                        message.getModelName(),
+                        modelId,
+                        message.getModelName(), // nodeId = modelName
+                        message.getPositionX(),
+                        message.getPositionY(),
+                        message.getSessionId(),
+                        message.getMessageId(),
+                        message.getClientTimestamp()
+                    );
+                }
+                return null;
+            }
+        );
+    }
+
+    @MessageMapping("/updateModelName")
+    public void updateModelName(UpdateModelNameMessage message, SimpMessageHeaderAccessor headerAccessor) {
+        handleWebSocketMessage(
+            "UPDATE_MODEL_NAME",
+            message,
+            headerAccessor,
+            () -> schemaVisualizerService.updateModelName(
+                message.getModelId(),
+                message.getNewModelName()
+            )
+        );
+    }
+
+    @MessageMapping("/deleteModel")
+    public void deleteModel(DeleteModelMessage message, SimpMessageHeaderAccessor headerAccessor) {
+        handleWebSocketMessage(
+            "DELETE_MODEL",
+            message,
+            headerAccessor,
+            () -> schemaVisualizerService.deleteModel(message.getModelId())
+        );
+    }
+
     /**
      * Generic method to handle WebSocket messages with filtering support
      */
