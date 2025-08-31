@@ -1,6 +1,7 @@
 // src/main/java/com/example/react_flow_be/controller/SchemaWebSocketController.java
 package com.example.react_flow_be.controller;
 
+import com.example.react_flow_be.config.LoggingMessagingTemplate;
 import com.example.react_flow_be.config.WebSocketSessionManager;
 import com.example.react_flow_be.dto.websocket.*;
 import com.example.react_flow_be.service.SchemaVisualizerService;
@@ -20,7 +21,7 @@ import java.util.function.Supplier;
 public class SchemaWebSocketController {
     
     private final SchemaVisualizerService schemaVisualizerService;
-    private final SimpMessagingTemplate messagingTemplate;
+    private final LoggingMessagingTemplate loggingMessagingTemplate; // Use custom wrapper
     private final WebSocketSessionManager sessionManager;
 
     @MessageMapping("/updateNodePosition")
@@ -226,53 +227,68 @@ public class SchemaWebSocketController {
             SimpMessageHeaderAccessor headerAccessor,
             Supplier<R> serviceCall
     ) {
-        String sessionId = headerAccessor.getSessionId();
+        String currentSessionId = headerAccessor.getSessionId();
 
-        log.info("Current session: {}", sessionId);
-        log.info("All active sessions: {}", sessionManager.getAllSessions());
+        // log.info("=== WebSocket Processing ===");
+        // log.info("Type: {} | Current Session: {}", messageType, currentSessionId);
+        
+        Set<String> otherSessions = sessionManager.getActiveSessionsExcept(currentSessionId);
+        // log.info("Will broadcast to {} other sessions: {}", otherSessions.size(), otherSessions);
         
         try {
             if (message instanceof BaseWebSocketMessage) {
-                ((BaseWebSocketMessage) message).setSessionId(sessionId);
+                ((BaseWebSocketMessage) message).setSessionId(currentSessionId);
             }
             
-            log.info("Processing {}: {}", messageType, message);
-            
             R result = serviceCall.get();
-            boolean success = isSuccessfulResult(result);
             
-            if (success) {
+            if (isSuccessfulResult(result)) {
                 Object responseData = (result != null && !(result instanceof Boolean)) ? result : message;
-                String messageId = extractMessageId(message);
+                WebSocketResponse<Object> response = WebSocketResponse.success(messageType, responseData, currentSessionId);
                 
-                WebSocketResponse<Object> response;
-                if (messageId != null) {
-                    response = WebSocketResponse.successWithTracking(messageType, responseData, sessionId, messageId);
-                } else {
-                    response = WebSocketResponse.success(messageType, responseData, sessionId);
-                }
+                // log.info("📦 Response payload: {}", response);
                 
-                // Gửi cho tất cả sessions trừ sender
-                Set<String> otherSessions = sessionManager.getActiveSessionsExcept(sessionId);
-                System.out.println(otherSessions.size());
+                // Gửi đến từng user queue với detailed logging
                 for (String otherSessionId : otherSessions) {
-                    System.out.println("other: " + otherSessionId);
-                    messagingTemplate.convertAndSendToUser(
-                        otherSessionId, 
-                        "/queue/schema-updates", 
-                        response
-                    );
+                    String destination = "/queue/schema-updates";
+                    String resolvedPath = "/user/" + otherSessionId + destination;
+                    
+                    // log.info("📤 Sending message:");
+                    // log.info("  - Target Session: {}", otherSessionId);  
+                    // log.info("  - Destination: {}", destination);
+                    // log.info("  - Resolved Path: {}", resolvedPath);
+                    // log.info("  - Message Type: {}", messageType);
+                    
+                    try {
+                        // Ghi log trước khi gửi
+                        // log.info("🚀 Calling: messagingTemplate.convertAndSendToUser('{}', '{}', response)", 
+                        //         otherSessionId, destination);
+                        
+                        loggingMessagingTemplate.convertAndSendToUser(
+                            otherSessionId, 
+                            destination, 
+                            response
+                        );
+                        
+                        // log.info("✅ SUCCESS: Message sent to session {} via {}", otherSessionId, resolvedPath);
+                        
+                    } catch (Exception e) {
+                        log.error("❌ FAILED: Could not send to session {} via {}: {}", 
+                                otherSessionId, resolvedPath, e.getMessage());
+                        log.error("Full error: ", e);
+                    }
                 }
                 
-                log.info("Successfully broadcasted {} to {} other sessions", messageType, otherSessions.size());
+                // log.info("🏁 Broadcast completed to {} sessions", otherSessions.size());
             } else {
-                sendErrorToUser(sessionId, "Failed to process " + messageType.toLowerCase().replace("_", " "));
+                log.error("❌ Service call failed for {}", messageType);
             }
             
         } catch (Exception e) {
-            log.error("Error processing {}: {}", messageType, e.getMessage(), e);
-            sendErrorToUser(sessionId, "Internal server error: " + e.getMessage());
+            log.error("💥 Error processing {}: {}", messageType, e.getMessage(), e);
         }
+        
+        // log.info("=== End Processing ===\n");
     }
     
     /**
@@ -297,11 +313,11 @@ public class SchemaWebSocketController {
     /**
      * Send error message to specific user
      */
-    private void sendErrorToUser(String sessionId, String errorMessage) {
-        WebSocketResponse<String> errorResponse = 
-            WebSocketResponse.error(errorMessage, sessionId);
-        messagingTemplate.convertAndSendToUser(
-            sessionId, "/queue/errors", errorResponse
-        );
-    }
+    // private void sendErrorToUser(String sessionId, String errorMessage) {
+    //     WebSocketResponse<String> errorResponse = 
+    //         WebSocketResponse.error(errorMessage, sessionId);
+    //     // messagingTemplate.convertAndSendToUser(
+    //     //     sessionId, "/queue/errors", errorResponse
+    //     // );
+    // }
 }
