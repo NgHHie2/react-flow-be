@@ -40,7 +40,10 @@ public class Model {
     @JoinColumn(name = "database_diagram_id")
     private DatabaseDiagram databaseDiagram;
     
-    @OneToMany(mappedBy = "model")
+    @OneToMany(mappedBy = "model", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Attribute> attributes;
     
+    @OneToMany(mappedBy = "targetModel", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Connection> incomingConnections;
+
 }

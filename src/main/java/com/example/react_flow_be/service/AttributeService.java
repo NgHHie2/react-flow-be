@@ -224,10 +224,10 @@ public class AttributeService {
                 );
                 
                 // Don't allow deletion if it's the only attribute
-                if (modelAttributes.size() <= 1) {
-                    log.warn("Cannot delete the only attribute in model {}", attribute.getModel().getName());
-                    return false;
-                }
+                // if (modelAttributes.size() <= 1) {
+                //     log.warn("Cannot delete the only attribute in model {}", attribute.getModel().getName());
+                //     return false;
+                // }
                 
                 // Remove any connections related to this attribute
                 if (attribute.getIsForeignKey()) {

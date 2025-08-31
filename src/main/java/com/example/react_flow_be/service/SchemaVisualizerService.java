@@ -260,22 +260,22 @@ public class SchemaVisualizerService {
                 String modelName = model.getName();
                 
                 // Check if this model is referenced by any foreign keys
-                List<Connection> incomingConnections = connectionRepository.findByTargetModelId(modelId);
-                if (!incomingConnections.isEmpty()) {
-                    log.warn("Cannot delete model {} - it has {} incoming foreign key references", 
-                        modelName, incomingConnections.size());
-                    return false;
-                }
+                // List<Connection> incomingConnections = connectionRepository.findByTargetModelId(modelId);
+                // if (!incomingConnections.isEmpty()) {
+                //     log.warn("Cannot delete model {} - it has {} incoming foreign key references", 
+                //         modelName, incomingConnections.size());
+                //     return false;
+                // }
                 
                 // Remove all outgoing connections from this model's attributes
-                model.getAttributes().forEach(attribute -> {
-                    if (attribute.getConnection() != null) {
-                        connectionService.removeConnectionsForAttribute(attribute.getId());
-                    }
-                });
+                // model.getAttributes().forEach(attribute -> {
+                //     if (attribute.getConnection() != null) {
+                //         connectionService.removeConnectionsForAttribute(attribute.getId());
+                //     }
+                // });
                 
                 // Delete all attributes first (cascade should handle this but being explicit)
-                attributeRepository.deleteAll(model.getAttributes());
+                // attributeRepository.deleteAll(model.getAttributes());
                 
                 // Delete the model
                 modelRepository.delete(model);

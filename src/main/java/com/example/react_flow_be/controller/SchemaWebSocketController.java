@@ -70,7 +70,6 @@ public class SchemaWebSocketController {
 
     @MessageMapping("/addAttribute")
     public void addAttribute(AddAttributeMessage message, SimpMessageHeaderAccessor headerAccessor) {
-        log.info("hello: ");
         handleWebSocketMessage(
             "ADD_ATTRIBUTE",
             message,
@@ -83,12 +82,13 @@ public class SchemaWebSocketController {
                 );
                 
                 if (attributeId != null) {
+                    // Tạo response với đầy đủ thông tin attribute
                     return new AddAttributeResponseMessage(
                         message.getModelName(),
                         message.getModelId(),
                         message.getAttributeName(),
                         message.getDataType(),
-                        attributeId,
+                        attributeId, // realAttributeId
                         message.getSessionId(),
                         message.getMessageId(),
                         message.getClientTimestamp()
@@ -105,7 +105,13 @@ public class SchemaWebSocketController {
             "DELETE_ATTRIBUTE",
             message,
             headerAccessor,
-            () -> schemaVisualizerService.deleteAttribute(message.getAttributeId())
+            () -> {
+                schemaVisualizerService.deleteAttribute(message.getAttributeId());
+                return new DeleteAttributeMessage(
+                    message.getModelName(),message.getModelId(),
+                        message.getAttributeId(), null, null, null
+                    );
+            }
         );
     }
 
@@ -140,7 +146,7 @@ public class SchemaWebSocketController {
         );
     }
 
-    @MessageMapping("/addModel")
+   @MessageMapping("/addModel")
     public void addModel(AddModelMessage message, SimpMessageHeaderAccessor headerAccessor) {
         handleWebSocketMessage(
             "ADD_MODEL",
@@ -155,9 +161,10 @@ public class SchemaWebSocketController {
                 );
                 
                 if (modelId != null) {
+                    // Tạo response với đầy đủ thông tin model
                     return new AddModelResponseMessage(
                         message.getModelName(),
-                        modelId,
+                        modelId, // realModelId
                         message.getModelName(), // nodeId = modelName
                         message.getPositionX(),
                         message.getPositionY(),
@@ -190,7 +197,20 @@ public class SchemaWebSocketController {
             "DELETE_MODEL",
             message,
             headerAccessor,
-            () -> schemaVisualizerService.deleteModel(message.getModelId())
+            () -> {
+                boolean success = schemaVisualizerService.deleteModel(message.getModelId());
+                if (success) {
+                    // Trả về message với cả modelId và modelName để frontend xử lý
+                    return new DeleteModelMessage(
+                        message.getModelId(),
+                        message.getModelName(), 
+                        message.getSessionId(),
+                        message.getMessageId(),
+                        message.getClientTimestamp()
+                    );
+                }
+                return null;
+            }
         );
     }
 
