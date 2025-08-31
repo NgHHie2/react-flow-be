@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Entity
@@ -39,8 +42,8 @@ public class Attribute {
     @JoinColumn(name = "model_id")
     private Model model;
     
-    @OneToOne(mappedBy = "attribute", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Connection connection;
+    @OneToMany(mappedBy = "attribute", cascade = CascadeType.ALL)
+    private List<Connection> connection;
     
     public enum IndexType {
         PRIMARY, UNIQUE, INDEX, FULLTEXT, SPATIAL

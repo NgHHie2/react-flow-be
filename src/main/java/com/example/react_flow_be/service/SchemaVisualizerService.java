@@ -259,33 +259,23 @@ public class SchemaVisualizerService {
                 Model model = modelOpt.get();
                 String modelName = model.getName();
                 
-                // Check if this model is referenced by any foreign keys
+                log.info("Deleting model: {}", modelName);
                 // List<Connection> incomingConnections = connectionRepository.findByTargetModelId(modelId);
                 // if (!incomingConnections.isEmpty()) {
-                //     log.warn("Cannot delete model {} - it has {} incoming foreign key references", 
-                //         modelName, incomingConnections.size());
-                //     return false;
+                //     System.out.println(incomingConnections.get(0).getId());
+                //     connectionRepository.deleteAll(incomingConnections);
+                //     log.info("Removed {} incoming connections", incomingConnections.size());
+                //     List<Connection> checkConnections = connectionRepository.findByTargetModelId(modelId);
+                //     System.out.println(checkConnections.get(0).getId());
                 // }
+                modelRepository.deleteById(modelId);
                 
-                // Remove all outgoing connections from this model's attributes
-                // model.getAttributes().forEach(attribute -> {
-                //     if (attribute.getConnection() != null) {
-                //         connectionService.removeConnectionsForAttribute(attribute.getId());
-                //     }
-                // });
-                
-                // Delete all attributes first (cascade should handle this but being explicit)
-                // attributeRepository.deleteAll(model.getAttributes());
-                
-                // Delete the model
-                modelRepository.delete(model);
-                
-                log.info("Deleted model: {} and its {} attributes", modelName, model.getAttributes().size());
+                log.info("Successfully deleted model: {} and all related data", modelName);
                 return true;
             }
             return false;
         } catch (Exception e) {
-            log.error("Error deleting model: {}", e.getMessage(), e);
+            log.error("Error deleting model {}: {}", modelId, e.getMessage(), e);
             return false;
         }
     }

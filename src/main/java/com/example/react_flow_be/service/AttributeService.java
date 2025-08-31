@@ -230,10 +230,10 @@ public class AttributeService {
                 // }
                 
                 // Remove any connections related to this attribute
-                if (attribute.getIsForeignKey()) {
-                    connectionService.removeConnectionsForAttribute(attributeId);
-                    log.info("Removed FK connections when deleting attribute {}", attributeId);
-                }
+                // if (attribute.getIsForeignKey()) {
+                //     connectionService.removeConnectionsForAttribute(attributeId);
+                //     log.info("Removed FK connections when deleting attribute {}", attributeId);
+                // }
                 
                 if (attribute.getIsPrimaryKey()) {
                     connectionService.removeConnectionsToAttribute(attribute.getModel().getName(), attribute.getName());
@@ -296,13 +296,13 @@ public class AttributeService {
     
     public AttributeDto convertToAttributeDto(Attribute attribute) {
         ConnectionDto connectionDto = null;
-        if (attribute.getConnection() != null) {
+        if (!attribute.getConnection().isEmpty()) {
             connectionDto = new ConnectionDto(
-                attribute.getConnection().getId(),
-                attribute.getConnection().getTargetModel() != null ? attribute.getConnection().getTargetModel().getName() : "Unknown",
-                attribute.getConnection().getTargetAttributeName(),
-                attribute.getConnection().getForeignKeyName(),
-                attribute.getConnection().getIsEnforced()
+                attribute.getConnection().get(0).getId(),
+                attribute.getConnection().get(0).getTargetModel() != null ? attribute.getConnection().get(0).getTargetModel().getName() : "Unknown",
+                attribute.getConnection().get(0).getTargetAttributeName(),
+                attribute.getConnection().get(0).getForeignKeyName(),
+                attribute.getConnection().get(0).getIsEnforced()
             );
         }
         

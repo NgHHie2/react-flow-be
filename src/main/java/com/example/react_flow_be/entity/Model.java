@@ -24,11 +24,8 @@ public class Model {
     
     private String nodeId;
     private String name;
-
-    // Position & Size
     private Double positionX;
     private Double positionY;
-    
     
     @CreationTimestamp
     private LocalDateTime createdAt;
@@ -40,10 +37,10 @@ public class Model {
     @JoinColumn(name = "database_diagram_id")
     private DatabaseDiagram databaseDiagram;
     
+    // Attributes sẽ được xóa tự động khi xóa Model
     @OneToMany(mappedBy = "model", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Attribute> attributes;
     
     @OneToMany(mappedBy = "targetModel", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Connection> incomingConnections;
-
 }

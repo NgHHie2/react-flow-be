@@ -35,7 +35,7 @@ public class Connection {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
     
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "attribute_id")
     private Attribute attribute;
     
