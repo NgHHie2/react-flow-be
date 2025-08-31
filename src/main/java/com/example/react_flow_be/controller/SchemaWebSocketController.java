@@ -1,6 +1,7 @@
 // src/main/java/com/example/react_flow_be/controller/SchemaWebSocketController.java
 package com.example.react_flow_be.controller;
 
+import com.example.react_flow_be.config.WebSocketSessionManager;
 import com.example.react_flow_be.dto.websocket.*;
 import com.example.react_flow_be.service.SchemaVisualizerService;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
+import java.util.Set;
 import java.util.function.Supplier;
 
 @Controller
@@ -19,7 +21,8 @@ public class SchemaWebSocketController {
     
     private final SchemaVisualizerService schemaVisualizerService;
     private final SimpMessagingTemplate messagingTemplate;
-    
+    private final WebSocketSessionManager sessionManager;
+
     @MessageMapping("/updateNodePosition")
     public void updateNodePosition(ModelUpdateMessage message, SimpMessageHeaderAccessor headerAccessor) {
         handleWebSocketMessage(
@@ -224,29 +227,24 @@ public class SchemaWebSocketController {
             Supplier<R> serviceCall
     ) {
         String sessionId = headerAccessor.getSessionId();
+
+        log.info("Current session: {}", sessionId);
+        log.info("All active sessions: {}", sessionManager.getAllSessions());
         
         try {
-            // Set session ID if message supports it
             if (message instanceof BaseWebSocketMessage) {
                 ((BaseWebSocketMessage) message).setSessionId(sessionId);
             }
             
             log.info("Processing {}: {}", messageType, message);
             
-            // Execute service call
             R result = serviceCall.get();
-            
-            // Check if operation was successful
             boolean success = isSuccessfulResult(result);
             
             if (success) {
-                // Use result if available, otherwise use original message
                 Object responseData = (result != null && !(result instanceof Boolean)) ? result : message;
-                
-                // Extract messageId from the original message for client-side filtering
                 String messageId = extractMessageId(message);
                 
-                // Create response with tracking info for client-side filtering
                 WebSocketResponse<Object> response;
                 if (messageId != null) {
                     response = WebSocketResponse.successWithTracking(messageType, responseData, sessionId, messageId);
@@ -254,10 +252,19 @@ public class SchemaWebSocketController {
                     response = WebSocketResponse.success(messageType, responseData, sessionId);
                 }
                 
-                // Broadcast to all clients (they will filter on client side)
-                messagingTemplate.convertAndSend("/topic/schema-updates", response);
+                // Gửi cho tất cả sessions trừ sender
+                Set<String> otherSessions = sessionManager.getActiveSessionsExcept(sessionId);
+                System.out.println(otherSessions.size());
+                for (String otherSessionId : otherSessions) {
+                    System.out.println("other: " + otherSessionId);
+                    messagingTemplate.convertAndSendToUser(
+                        otherSessionId, 
+                        "/queue/schema-updates", 
+                        response
+                    );
+                }
                 
-                log.info("Successfully processed {} with sessionId: {}", messageType, sessionId);
+                log.info("Successfully broadcasted {} to {} other sessions", messageType, otherSessions.size());
             } else {
                 sendErrorToUser(sessionId, "Failed to process " + messageType.toLowerCase().replace("_", " "));
             }

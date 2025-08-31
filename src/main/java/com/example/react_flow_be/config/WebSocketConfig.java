@@ -13,10 +13,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
         // Enable broker để gửi message đến client
-        config.enableSimpleBroker("/topic");
+        config.enableSimpleBroker("/topic", "/queue"); // Thêm /queue
         
         // Prefix cho message từ client đến server
         config.setApplicationDestinationPrefixes("/app");
+        
+        // Prefix cho user-specific destinations
+        config.setUserDestinationPrefix("/user"); // Thêm dòng này
     }
 
     @Override
